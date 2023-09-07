@@ -191,15 +191,32 @@ var TSOS;
                 var topic = args[0];
                 switch (topic) {
                     case "help":
-                        _StdOut.putText("Help displays a list of (hopefully) valid commands.");
+                        _StdOut.putText("Displays a list of available commands.");
                         break;
-                    // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
+                    case "ver":
+                        _StdOut.putText("Displays the current version of the operating system.");
+                        break;
+                    case "shutdown":
+                        _StdOut.putText("Shuts down the virtual OS but keeps the underlying simulation running.");
+                        break;
+                    case "cls":
+                        _StdOut.putText("Clears the screen and resets the cursor position.");
+                        break;
+                    case "trace":
+                        _StdOut.putText("Turns the OS trace on or off.");
+                        break;
+                    case "rot13":
+                        _StdOut.putText("Provides rot13 obfuscation on the given string.");
+                        break;
+                    case "prompt":
+                        _StdOut.putText("Sets the console prompt to the provided string. Usage: prompt <string>.");
+                        break;
                     default:
-                        _StdOut.putText("No manual entry for " + args[0] + ".");
+                        _StdOut.putText("No manual entry for " + args[0] + ". Type 'help' for a list of commands.");
                 }
             }
             else {
-                _StdOut.putText("Usage: man <topic>  Please supply a topic.");
+                _StdOut.putText("Usage: man <topic>. Please supply a topic.");
             }
         }
         shellTrace(args) {
