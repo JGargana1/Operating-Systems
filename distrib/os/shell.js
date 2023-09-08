@@ -47,6 +47,15 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
+            // date
+            sc = new TSOS.ShellCommand(this.shellDate, "date", "- Displays the current date and time.");
+            this.commandList[this.commandList.length] = sc;
+            // whereami
+            sc = new TSOS.ShellCommand(this.shellWhereAmI, "whereami", "- Displays where the user is currently located. (I know where you live)");
+            this.commandList[this.commandList.length] = sc;
+            // Lotto
+            sc = new TSOS.ShellCommand(this.shellLotto, "lotto", "- Have the chance to win a million bucks.");
+            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -260,6 +269,25 @@ var TSOS;
             else {
                 _StdOut.putText("Usage: prompt <string>  Please supply a string.");
             }
+        }
+        shellDate(args) {
+            const currentDate = new Date();
+            _StdOut.putText(currentDate.toLocaleString());
+        }
+        shellWhereAmI(args) {
+            const locations = ["Mars", "The Matrix", "Marist", "In-between portals"];
+            const randomLocation = locations[Math.floor(Math.random() * locations.length)];
+            _StdOut.putText("Where you are curently standing: " + randomLocation);
+        }
+        shellLotto(args) {
+            const lottos = [
+                "You lose!",
+                "You just won a million bucks! press alt + f4 to win!",
+                "You lose!",
+                "You lose! (you really suck at this)",
+            ];
+            const randomLotto = lottos[Math.floor(Math.random() * lottos.length)];
+            _StdOut.putText(randomLotto);
         }
     }
     TSOS.Shell = Shell;
