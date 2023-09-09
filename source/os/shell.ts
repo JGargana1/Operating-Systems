@@ -21,6 +21,9 @@ module TSOS {
         }
 
         public init() {
+
+            this.initDateTimeUpdater();
+            
             var sc: ShellCommand;
             //
             // Load the command list.
@@ -89,8 +92,23 @@ module TSOS {
             this.commandList[this.commandList.length] = sc;
 
 
+            
+            sc = new ShellCommand(this.shellStatus, "status", "<string> - Set the status message.");
+            this.commandList[this.commandList.length] = sc;
+
+
+
+
             // Display the initial prompt.
             this.putPrompt();
+        }
+
+        private initDateTimeUpdater() {
+            const dateTimeDiv = document.getElementById('date-time');
+            setInterval(() => {
+                const now = new Date();
+                dateTimeDiv.innerText = now.toLocaleString();
+            }, 1000);
         }
 
         public putPrompt() {
@@ -337,6 +355,18 @@ module TSOS {
             const randomLotto = lottos[Math.floor(Math.random() * lottos.length)];
             _StdOut.putText(randomLotto);
         }
+
+        public shellStatus(args: string[]) {
+            if (args.length > 0) {
+                const statusMessage = args.join(' ');
+                // Assuming you have an HTML element with ID 'status-display' to show status messages
+                document.getElementById('status-display').innerText = 'Status: ' + statusMessage;
+            } else {
+                _StdOut.putText("Usage: status <string>  Please supply a status message.");
+            }
+        }
+        
+        
         
 
 

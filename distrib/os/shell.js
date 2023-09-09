@@ -18,6 +18,7 @@ var TSOS;
         constructor() {
         }
         init() {
+            this.initDateTimeUpdater();
             var sc;
             //
             // Load the command list.
@@ -56,8 +57,17 @@ var TSOS;
             // Lotto
             sc = new TSOS.ShellCommand(this.shellLotto, "lotto", "- Have the chance to win a million bucks.");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellStatus, "status", "<string> - Set the status message.");
+            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
+        }
+        initDateTimeUpdater() {
+            const dateTimeDiv = document.getElementById('date-time');
+            setInterval(() => {
+                const now = new Date();
+                dateTimeDiv.innerText = now.toLocaleString();
+            }, 1000);
         }
         putPrompt() {
             _StdOut.putText(this.promptStr);
@@ -288,6 +298,16 @@ var TSOS;
             ];
             const randomLotto = lottos[Math.floor(Math.random() * lottos.length)];
             _StdOut.putText(randomLotto);
+        }
+        shellStatus(args) {
+            if (args.length > 0) {
+                const statusMessage = args.join(' ');
+                // Assuming you have an HTML element with ID 'status-display' to show status messages
+                document.getElementById('status-display').innerText = 'Status: ' + statusMessage;
+            }
+            else {
+                _StdOut.putText("Usage: status <string>  Please supply a status message.");
+            }
         }
     }
     TSOS.Shell = Shell;
