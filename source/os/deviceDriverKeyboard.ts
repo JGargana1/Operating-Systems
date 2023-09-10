@@ -9,6 +9,9 @@ module TSOS {
     // Extends DeviceDriver
     export class DeviceDriverKeyboard extends DeviceDriver {
 
+    
+
+
         constructor() {
             // Override the base method pointers.
 
@@ -28,6 +31,7 @@ module TSOS {
         }
 
         public krnKbdDispatchKeyPress(params) {
+            
             // Parse the params.  TODO: Check that the params are valid and osTrapError if not.
             var keyCode = params[0];
             var isShifted = params[1];
@@ -90,7 +94,18 @@ module TSOS {
                 
             } else if (keyCode === 9) { // Tab key
                 _Console.autoComplete();
-            }
+
+                
+            }else if (keyCode === 38) { // Up arrow key
+                _Console.navigateCommandHistory(-1); 
+            } 
+            else if (keyCode === 40) { // Down arrow key
+                _Console.navigateCommandHistory(1);
+            } 
+              
+            
+            
+            
             
             
 

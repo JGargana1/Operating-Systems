@@ -12,6 +12,8 @@ var TSOS;
         currentXPosition;
         currentYPosition;
         buffer;
+        commandHistory = [];
+        commandHistoryIndex = -1;
         commandStartXPosition = 0;
         constructor(currentFont = _DefaultFontFamily, currentFontSize = _DefaultFontSize, currentXPosition = 0, currentYPosition = _DefaultFontSize, buffer = "") {
             this.currentFont = currentFont;
@@ -40,6 +42,10 @@ var TSOS;
                 if (chr === String.fromCharCode(13)) { // the Enter key
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
+                    if (this.buffer !== "") {
+                        this.commandHistory.push(this.buffer);
+                        this.commandHistoryIndex = this.commandHistory.length;
+                    }
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
@@ -113,6 +119,19 @@ var TSOS;
                 this.currentXPosition = 0;
                 this.putText(this.buffer);
             }
+        }
+        navigateCommandHistory(offset) {
+            // Adjust the command history index
+            this.commandHistoryIndex = Math.min(Math.max(this.commandHistoryIndex + offset, 0), this.commandHistory.length - 1);
+            // Get the command from the history
+            const command = this.commandHistory[this.commandHistoryIndex];
+            // Clear the current line
+            _DrawingContext.clearRect(0, this.currentYPosition - this.currentFontSize, _Canvas.width, this.currentFontSize + _FontHeightMargin);
+            // Reset X position and draw the command from history
+            this.currentXPosition = 0;
+            this.putText(command);
+            // Set the buffer to the command from history
+            this.buffer = command;
         }
     }
     TSOS.Console = Console;

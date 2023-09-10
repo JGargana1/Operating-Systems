@@ -8,6 +8,14 @@
 module TSOS {
 
     export class Console {
+
+
+        public commandHistory: string[] = [];
+        public commandHistoryIndex: number = -1;
+
+    
+       
+
         public commandStartXPosition = 0;
 
         constructor(public currentFont = _DefaultFontFamily,
@@ -33,6 +41,10 @@ module TSOS {
         }
 
         public handleInput(): void {
+
+            
+
+
             while (_KernelInputQueue.getSize() > 0) {
                 // Get the next character from the kernel input queue.
                 var chr = _KernelInputQueue.dequeue();
@@ -40,6 +52,10 @@ module TSOS {
                 if (chr === String.fromCharCode(13)) { // the Enter key
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
+                    if (this.buffer !== "") {
+                        this.commandHistory.push(this.buffer);
+                        this.commandHistoryIndex = this.commandHistory.length;
+                    }
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
@@ -126,6 +142,33 @@ module TSOS {
                 this.putText(this.buffer);
             }
         }
+        public navigateCommandHistory(offset: number): void {
+            // Adjust the command history index
+            this.commandHistoryIndex = Math.min(
+                Math.max(this.commandHistoryIndex + offset, 0), 
+                this.commandHistory.length - 1
+            );
+        
+            // Get the command from the history
+            const command = this.commandHistory[this.commandHistoryIndex];
+        
+            // Clear the current line
+            _DrawingContext.clearRect(0, this.currentYPosition - this.currentFontSize, _Canvas.width, this.currentFontSize + _FontHeightMargin);
+        
+            // Reset X position and draw the command from history
+            this.currentXPosition = 0;
+            this.putText(command);
+        
+            // Set the buffer to the command from history
+            this.buffer = command;
+        }
+        
+
+
+        
+        
+        
+        
         
         
         

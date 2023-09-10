@@ -132,6 +132,12 @@ var TSOS;
             else if (keyCode === 9) { // Tab key
                 _Console.autoComplete();
             }
+            else if (keyCode === 38) { // Up arrow key
+                _Console.navigateCommandHistory(-1);
+            }
+            else if (keyCode === 40) { // Down arrow key
+                _Console.navigateCommandHistory(1);
+            }
         }
     }
     TSOS.DeviceDriverKeyboard = DeviceDriverKeyboard;
