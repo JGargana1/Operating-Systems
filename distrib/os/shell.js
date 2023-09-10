@@ -306,7 +306,6 @@ var TSOS;
         shellStatus(args) {
             if (args.length > 0) {
                 const statusMessage = args.join(' ');
-                // Assuming you have an HTML element with ID 'status-display' to show status messages
                 document.getElementById('status-display').innerText = 'Status: ' + statusMessage;
             }
             else {
@@ -317,11 +316,8 @@ var TSOS;
             _Kernel.krnTrapError("Test trap command executed");
         }
         shellLoad(args) {
-            // Step 1: Get the input from the text area
             const input = document.getElementById('taProgramInput').value;
-            // Step 2: Validate the input to check if it contains only hex digits and spaces
             const isValid = /^[0-9A-Fa-f\s]*$/.test(input);
-            // Step 3: Display a message based on whether or not the input is valid
             if (isValid) {
                 _StdOut.putText("The input is valid.");
             }

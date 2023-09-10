@@ -47,7 +47,43 @@ module TSOS {
                         (keyCode == 13)) {                       // enter
                 chr = String.fromCharCode(keyCode);
                 _KernelInputQueue.enqueue(chr);
+            } else if (isShifted && keyCode >= 186 && keyCode <= 222) {
+                // Handle shifted symbols
+                switch (keyCode) {
+                    case 186: chr = ":"; break;
+                    case 187: chr = "+"; break;
+                    case 188: chr = "<"; break;
+                    case 189: chr = "_"; break;
+                    case 190: chr = ">"; break;
+                    case 191: chr = "?"; break;
+                    case 192: chr = "~"; break;
+                    case 219: chr = "{"; break;
+                    case 220: chr = "|"; break;
+                    case 221: chr = "}"; break;
+                    case 222: chr = "\""; break;
+                    default: break;
+                }
+                _KernelInputQueue.enqueue(chr);
             }
+            else if (keyCode >= 186 && keyCode <= 222) {
+                // Handle non-shifted symbols
+                switch (keyCode) {
+                    case 186: chr = ";"; break;
+                    case 187: chr = "="; break;
+                    case 188: chr = ","; break;
+                    case 189: chr = "-"; break;
+                    case 190: chr = "."; break;
+                    case 191: chr = "/"; break;
+                    case 192: chr = "`"; break;
+                    case 219: chr = "["; break;
+                    case 220: chr = "\\"; break;
+                    case 221: chr = "]"; break;
+                    case 222: chr = "'"; break;
+                    default: break;
+                }
+                _KernelInputQueue.enqueue(chr);
+            }
+
         }
     }
 }

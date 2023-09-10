@@ -42,6 +42,10 @@ var TSOS;
                     // ... and reset our buffer.
                     this.buffer = "";
                 }
+                // TODO: add more special character handling here, e.g., ctrl-c
+                // else if (chr === String.fromCharCode(/*some special code*/)) {
+                //     // Handle other special characters
+                // }
                 else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
@@ -49,7 +53,6 @@ var TSOS;
                     // ... and add it to our buffer.
                     this.buffer += chr;
                 }
-                // TODO: Add a case for Ctrl-C that would allow the user to break the current program.
             }
         }
         putText(text) {
