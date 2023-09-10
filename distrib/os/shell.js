@@ -46,6 +46,8 @@ var TSOS;
             // prompt <string>
             sc = new TSOS.ShellCommand(this.shellPrompt, "prompt", "<string> - Sets the prompt.");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellTrap, "trap", "Trigger a test kernel error");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // date
@@ -308,6 +310,9 @@ var TSOS;
             else {
                 _StdOut.putText("Usage: status <string>  Please supply a status message.");
             }
+        }
+        shellTrap(args) {
+            _Kernel.krnTrapError("Test trap command executed");
         }
     }
     TSOS.Shell = Shell;

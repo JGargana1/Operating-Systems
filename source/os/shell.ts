@@ -76,6 +76,14 @@ module TSOS {
                                   "<string> - Sets the prompt.");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellTrap,
+                                "trap", "Trigger a test kernel error")
+            this.commandList[this.commandList.length] = sc;
+        
+
+
+            
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             
@@ -245,6 +253,7 @@ module TSOS {
                 _StdOut.putText("  " + _OsShell.commandList[i].command + " " + _OsShell.commandList[i].description);
             }
         }
+        
 
         public shellShutdown(args: string[]) {
              _StdOut.putText("Shutting down...");
@@ -364,6 +373,10 @@ module TSOS {
             } else {
                 _StdOut.putText("Usage: status <string>  Please supply a status message.");
             }
+        }
+
+        public shellTrap(args): void {
+            _Kernel.krnTrapError("Test trap command executed");
         }
         
         

@@ -148,9 +148,15 @@ var TSOS;
             }
         }
         krnTrapError(msg) {
-            TSOS.Control.hostLog("OS ERROR - TRAP: " + msg);
-            // TODO: Display error on console, perhaps in some sort of colored screen. (Maybe blue?)
             this.krnShutdown();
+            // Change the canvas background color to blue
+            var hostLog = document.getElementById("display");
+            hostLog.style.backgroundColor = "blue";
+            // Display the error message in white color
+            _StdOut.putText("Kernel Error: " + msg);
+            // ... (rest of your existing code)
+            // Stop script execution (this is just for simulation, it doesn't stop the actual OS)
+            throw new Error(msg);
         }
     }
     TSOS.Kernel = Kernel;
