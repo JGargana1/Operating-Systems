@@ -66,6 +66,9 @@ var TSOS;
             // Display the initial prompt.
             this.putPrompt();
         }
+        getCommandNames() {
+            return this.commandList.map(command => command.command);
+        }
         initDateTimeUpdater() {
             const dateTimeDiv = document.getElementById('date-time');
             setInterval(() => {

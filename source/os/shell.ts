@@ -119,6 +119,11 @@ module TSOS {
             this.putPrompt();
         }
 
+        public getCommandNames(): string[] {
+            return this.commandList.map(command => command.command);
+        }
+        
+
         private initDateTimeUpdater() {
             const dateTimeDiv = document.getElementById('date-time');
             setInterval(() => {

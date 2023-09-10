@@ -99,6 +99,21 @@ var TSOS;
                 _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - this.currentFontSize, offset, this.currentFontSize + _FontHeightMargin);
             }
         }
+        autoComplete() {
+            // Get the list of valid command names from the shell
+            const validCommands = _OsShell.getCommandNames();
+            // Find commands that start with the current buffer
+            const matches = validCommands.filter(cmd => cmd.startsWith(this.buffer));
+            if (matches.length > 0) {
+                // If there are matches, complete the buffer with the first match
+                this.buffer = matches[0];
+                // Clear the current line
+                _DrawingContext.clearRect(0, this.currentYPosition - this.currentFontSize, _Canvas.width, this.currentFontSize + _FontHeightMargin);
+                // Reset X position and draw the buffer
+                this.currentXPosition = 0;
+                this.putText(this.buffer);
+            }
+        }
     }
     TSOS.Console = Console;
 })(TSOS || (TSOS = {}));

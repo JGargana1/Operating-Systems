@@ -86,7 +86,12 @@ module TSOS {
             } else if (keyCode === 8) { // Backspace
                 chr = String.fromCharCode(keyCode);
                 _KernelInputQueue.enqueue(chr);
+
+                
+            } else if (keyCode === 9) { // Tab key
+                _Console.autoComplete();
             }
+            
             
 
             
