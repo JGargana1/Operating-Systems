@@ -77,8 +77,16 @@ module TSOS {
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellTrap,
-                                "trap", "Trigger a test kernel error")
+                                  "trap", "-Trigger a test kernel error");
             this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellLoad,
+                                  "load", "- Validates the user code in the HTML5 text area.");
+            this.commandList[this.commandList.length] = sc;
+
+
+
+
         
 
 
@@ -368,7 +376,6 @@ module TSOS {
         public shellStatus(args: string[]) {
             if (args.length > 0) {
                 const statusMessage = args.join(' ');
-                // Assuming you have an HTML element with ID 'status-display' to show status messages
                 document.getElementById('status-display').innerText = 'Status: ' + statusMessage;
             } else {
                 _StdOut.putText("Usage: status <string>  Please supply a status message.");
@@ -379,6 +386,19 @@ module TSOS {
             _Kernel.krnTrapError("Test trap command executed");
         }
         
+        public shellLoad(args: string[]): void {
+            const input: string = (document.getElementById('taProgramInput') as HTMLInputElement).value;
+
+        
+            const isValid: boolean = /^[0-9A-Fa-f\s]*$/.test(input);
+        
+            if (isValid) {
+                _StdOut.putText("The input is valid.");
+            } else {
+                _StdOut.putText("The input is invalid. Only hex digits and spaces are allowed.");
+            }
+        }
+    
         
         
 

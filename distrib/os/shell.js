@@ -46,7 +46,9 @@ var TSOS;
             // prompt <string>
             sc = new TSOS.ShellCommand(this.shellPrompt, "prompt", "<string> - Sets the prompt.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellTrap, "trap", "Trigger a test kernel error");
+            sc = new TSOS.ShellCommand(this.shellTrap, "trap", "-Trigger a test kernel error");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Validates the user code in the HTML5 text area.");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -313,6 +315,19 @@ var TSOS;
         }
         shellTrap(args) {
             _Kernel.krnTrapError("Test trap command executed");
+        }
+        shellLoad(args) {
+            // Step 1: Get the input from the text area
+            const input = document.getElementById('taProgramInput').value;
+            // Step 2: Validate the input to check if it contains only hex digits and spaces
+            const isValid = /^[0-9A-Fa-f\s]*$/.test(input);
+            // Step 3: Display a message based on whether or not the input is valid
+            if (isValid) {
+                _StdOut.putText("The input is valid.");
+            }
+            else {
+                _StdOut.putText("The input is invalid. Only hex digits and spaces are allowed.");
+            }
         }
     }
     TSOS.Shell = Shell;
