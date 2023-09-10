@@ -12,6 +12,7 @@ var TSOS;
         currentXPosition;
         currentYPosition;
         buffer;
+        commandStartXPosition = 0;
         constructor(currentFont = _DefaultFontFamily, currentFontSize = _DefaultFontSize, currentXPosition = 0, currentYPosition = _DefaultFontSize, buffer = "") {
             this.currentFont = currentFont;
             this.currentFontSize = currentFontSize;
@@ -22,6 +23,7 @@ var TSOS;
         init() {
             this.clearScreen();
             this.resetXY();
+            this.commandStartXPosition = 0;
         }
         clearScreen() {
             _DrawingContext.clearRect(0, 0, _Canvas.width, _Canvas.height);
@@ -41,11 +43,11 @@ var TSOS;
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
+                    this.commandStartXPosition = 0; // Reset the command start position here
                 }
-                // TODO: add more special character handling here, e.g., ctrl-c
-                // else if (chr === String.fromCharCode(/*some special code*/)) {
-                //     // Handle other special characters
-                // }
+                else if (chr === String.fromCharCode(8)) { // the Backspace key
+                    this.removeLastCharacter();
+                }
                 else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
@@ -53,6 +55,7 @@ var TSOS;
                     // ... and add it to our buffer.
                     this.buffer += chr;
                 }
+                // TODO: Add a case for Ctrl-C that would allow the user to break the current program.
             }
         }
         putText(text) {
@@ -82,6 +85,19 @@ var TSOS;
                 _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                 _FontHeightMargin;
             // TODO: Handle scrolling. (iProject 1)
+        }
+        removeLastCharacter() {
+            if (this.buffer.length > 0) {
+                // Get the last character from the buffer
+                var removedChar = this.buffer.charAt(this.buffer.length - 1);
+                // Remove the last character from the buffer
+                this.buffer = this.buffer.substring(0, this.buffer.length - 1);
+                // Recalculate the current X position by "rewinding" the addition of the last character
+                var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, removedChar);
+                this.currentXPosition -= offset;
+                // Clear the last character from the canvas
+                _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - this.currentFontSize, offset, this.currentFontSize + _FontHeightMargin);
+            }
         }
     }
     TSOS.Console = Console;

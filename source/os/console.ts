@@ -8,17 +8,19 @@
 module TSOS {
 
     export class Console {
+        public commandStartXPosition = 0;
 
         constructor(public currentFont = _DefaultFontFamily,
-                    public currentFontSize = _DefaultFontSize,
-                    public currentXPosition = 0,
-                    public currentYPosition = _DefaultFontSize,
-                    public buffer = "") {
-        }
+            public currentFontSize = _DefaultFontSize,
+            public currentXPosition = 0,
+            public currentYPosition = _DefaultFontSize,
+            public buffer = "") {
+}
 
         public init(): void {
             this.clearScreen();
             this.resetXY();
+            this.commandStartXPosition = 0;
         }
 
         public clearScreen(): void {
@@ -41,7 +43,12 @@ module TSOS {
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
-                } else {
+                    this.commandStartXPosition = 0; // Reset the command start position here
+                }
+                 else if (chr === String.fromCharCode(8)) { // the Backspace key
+                    this.removeLastCharacter();
+                }
+                 else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
                     this.putText(chr);
@@ -82,5 +89,27 @@ module TSOS {
 
             // TODO: Handle scrolling. (iProject 1)
         }
+        public removeLastCharacter(): void {
+            if (this.buffer.length > 0) {
+                // Get the last character from the buffer
+                var removedChar = this.buffer.charAt(this.buffer.length - 1);
+        
+                // Remove the last character from the buffer
+                this.buffer = this.buffer.substring(0, this.buffer.length - 1);
+        
+                // Recalculate the current X position by "rewinding" the addition of the last character
+                var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, removedChar);
+                this.currentXPosition -= offset;
+        
+                // Clear the last character from the canvas
+                _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - this.currentFontSize, offset, this.currentFontSize + _FontHeightMargin);
+        
+                
+            }
+        }
+        
+        
+        
+        
     }
  }
