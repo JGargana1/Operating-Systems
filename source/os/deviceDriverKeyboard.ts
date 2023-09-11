@@ -45,8 +45,24 @@ module TSOS {
                     chr = String.fromCharCode(keyCode + 32); // Lowercase a-z
                 }
                 // TODO: Check for caps-lock and handle as shifted if so.
+                
                 _KernelInputQueue.enqueue(chr);
-            } else if (((keyCode >= 48) && (keyCode <= 57)) ||   // digits
+            } else if (isShifted && ((keyCode >= 48) && (keyCode <= 57))) { // Shift + number keys to handle symbols
+                switch (keyCode) {
+                    case 48: chr = ")"; break;
+                    case 49: chr = "!"; break;
+                    case 50: chr = "@"; break;
+                    case 51: chr = "#"; break;
+                    case 52: chr = "$"; break;
+                    case 53: chr = "%"; break;
+                    case 54: chr = "^"; break;
+                    case 55: chr = "&"; break;
+                    case 56: chr = "*"; break;
+                    case 57: chr = "("; break;
+                    default: break;
+                }
+                _KernelInputQueue.enqueue(chr);
+            }else if (((keyCode >= 48) && (keyCode <= 57)) ||   // digits
                         (keyCode == 32)                     ||   // space
                         (keyCode == 13)) {                       // enter
                 chr = String.fromCharCode(keyCode);
@@ -87,7 +103,9 @@ module TSOS {
                 }
                 _KernelInputQueue.enqueue(chr);
 
-            } else if (keyCode === 8) { // Backspace
+            }
+            
+             else if (keyCode === 8) { // Backspace
                 chr = String.fromCharCode(keyCode);
                 _KernelInputQueue.enqueue(chr);
 
@@ -101,7 +119,8 @@ module TSOS {
             } 
             else if (keyCode === 40) { // Down arrow key
                 _Console.navigateCommandHistory(1);
-            } 
+            }
+            
               
             
             
