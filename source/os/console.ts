@@ -46,6 +46,11 @@ module TSOS {
             this.currentYPosition = this.currentFontSize;
         }
 
+        public putPrompt(): void {
+            this.advanceLine();
+            this.putText(_OsShell.promptStr);
+        }
+
         public handleInput(): void {
 
             
@@ -69,7 +74,7 @@ module TSOS {
                     // ... and reset our buffer.
                     this.buffer = "";
                     this.commandStartXPosition = 0; // Reset the command start position here
-                    
+                    this.putPrompt();
                 }
                  else if (chr === String.fromCharCode(8)) { // the Backspace key
                     this.removeLastCharacter();
@@ -115,7 +120,10 @@ module TSOS {
         
             this.lines.push(""); // Add a new line to the lines array
             this.buffer = "";  // Clear the buffer as we have advanced to a new line
+            this.commandStartXPosition = 0;  // Reset the command start position to the beginning of the line
         }
+        
+        
         public redrawConsole(): void {
             this.clearScreen(); // Clear the screen
             
