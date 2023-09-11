@@ -12,6 +12,7 @@ var TSOS;
         currentXPosition;
         currentYPosition;
         buffer;
+        lines = [];
         commandHistory = [];
         commandHistoryIndex = -1;
         commandStartXPosition = 0;
@@ -65,32 +66,57 @@ var TSOS;
             }
         }
         putText(text) {
-            /*  My first inclination here was to write two functions: putChar() and putString().
-                Then I remembered that JavaScript is (sadly) untyped and it won't differentiate
-                between the two. (Although TypeScript would. But we're compiling to JavaScipt anyway.)
-                So rather than be like PHP and write two (or more) functions that
-                do the same thing, thereby encouraging confusion and decreasing readability, I
-                decided to write one function and use the term "text" to connote string or char.
-            */
             if (text !== "") {
-                // Draw the text at the current X and Y coordinates.
                 _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
-                // Move the current X position.
                 var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
-                this.currentXPosition = this.currentXPosition + offset;
+                this.currentXPosition += offset;
+                if (this.lines.length === 0) {
+                    this.lines.push(text);
+                }
+                else {
+                    this.lines[this.lines.length - 1] += text;
+                }
             }
         }
         advanceLine() {
             this.currentXPosition = 0;
-            /*
-             * Font size measures from the baseline to the highest point in the font.
-             * Font descent measures from the baseline to the lowest point in the font.
-             * Font height margin is extra spacing between the lines.
-             */
             this.currentYPosition += _DefaultFontSize +
                 _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                 _FontHeightMargin;
-            // TODO: Handle scrolling. (iProject 1)
+            // If we are about to go off screen
+            if (this.currentYPosition > _Canvas.height) {
+                // Move the 'camera' up by one line height
+                this.lines.shift();
+                this.redrawConsole();
+                this.currentYPosition -= (_DefaultFontSize +
+                    _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                    _FontHeightMargin); // Adjust this to match your line height
+            }
+            this.lines.push(""); // Add a new line to the lines array
+            this.buffer = ""; // Clear the buffer as we have advanced to a new line
+        }
+        redrawConsole() {
+            this.clearScreen(); // Clear the screen
+            // Reset the Y position
+            this.currentYPosition = this.currentFontSize;
+            // Redraw each line without calling advanceLine()
+            for (let line of this.lines) {
+                this.currentXPosition = 0;
+                this.putTextWithoutAdvancing(line);
+                this.currentYPosition += _DefaultFontSize +
+                    _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                    _FontHeightMargin;
+            }
+            // Set the X position based on the length of the last line to allow continuous typing
+            this.currentXPosition = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.lines[this.lines.length - 1]);
+        }
+        putTextWithoutAdvancing(text) {
+            if (text !== "") {
+                _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
+                var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                this.currentXPosition += offset;
+            }
+            // this.currentXPosition = 0;  // We remove this line to maintain the X position across redraws
         }
         removeLastCharacter() {
             if (this.buffer.length > 0) {
@@ -103,6 +129,9 @@ var TSOS;
                 this.currentXPosition -= offset;
                 // Clear the last character from the canvas
                 _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - this.currentFontSize, offset, this.currentFontSize + _FontHeightMargin);
+            }
+            if (this.lines.length > 0) {
+                this.lines[this.lines.length - 1] = this.buffer;
             }
         }
         autoComplete() {
@@ -118,6 +147,9 @@ var TSOS;
                 // Reset X position and draw the buffer
                 this.currentXPosition = 0;
                 this.putText(this.buffer);
+            }
+            if (this.lines.length > 0) {
+                this.lines[this.lines.length - 1] = this.buffer;
             }
         }
         navigateCommandHistory(offset) {
