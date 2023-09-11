@@ -215,6 +215,9 @@ module TSOS {
         
             // Set the buffer to the command from history
             this.buffer = command;
+            if (this.lines.length > 0) {
+                this.lines[this.lines.length - 1] = this.buffer;
+            }
         }
         
 
