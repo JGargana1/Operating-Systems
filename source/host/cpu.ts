@@ -37,6 +37,61 @@ module TSOS {
             _Kernel.krnTrace('CPU cycle');
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
+            let opCode = _MemoryAccessor.read(this.PC);
+
+            switch(opCode) {
+                case "A9":
+                    this.loadAccWithConstant();
+                    break;
+                case "AD":
+                    this.loadAccFromMemory();
+                    break;
+                case "8D":
+                    this.storeAccInMemory();
+                    break;
+                case "6D":
+                    this.addWithCarry();
+                    break;
+                case "A2":
+                    this.loadXWithConstant();
+                    break;
+                case "AE":
+                    this.loadXFromMemory();
+                    break;
+                case "A0":
+                    this.loadYWithConstant();
+                    break;
+                case "AC":
+                    this.loadYFromMemory();
+                    break;
+                case "EA":
+                    
+                    this.PC++;
+                    break;
+                case "00":
+                    this.break();
+                    break;
+                case "EC":
+                    this.compareByteToX();
+                    break;
+                case "D0":
+                    this.branchNBytesIfZFlagIs0();
+                    break;
+                case "EE":
+                    this.incrementValueOfByte();
+                    break;
+                case "FF":
+                    this.systemCall();
+                    break;
+                default:
+                    
+                    this.isExecuting = false;
+                    _Kernel.krnTrace("Invalid OP code: " + opCode);
+                    break;
+            }
+
+            // TODO: Update the CPU, PCB, and memory displays.
         }
+       
     }
 }
