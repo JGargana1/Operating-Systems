@@ -402,19 +402,62 @@ module TSOS {
         public shellLoad(args: string[]): void {
             const input: string = (document.getElementById('taProgramInput') as HTMLInputElement).value;
             
-            // Modified regex to check only for hexadecimal characters and input is non-empty
-            const isValid: boolean = /^[0-9A-Fa-f]+$/.test(input);
+            // Validate that the input is not empty and contains only valid hexadecimal characters.
+            const isValid: boolean = /^[0-9A-Fa-f\s]+$/.test(input);
             
             if (isValid) {
-                _StdOut.putText("The input is valid.");
+                const opCodes: string[] = input.split(/\s+/); // Split the input by whitespace to get individual op codes.
+        
+                if (opCodes.length <= 256) { // Checking if the input does not exceed memory capacity.
+                    // Load the op codes into memory starting from location $0000.
+                    for (let i = 0; i < opCodes.length; i++) {
+                        // Use MemoryAccessor to write op codes to memory.
+                        _MemoryAccessor.write(i, opCodes[i]);
+                        console.log(`Address: ${i}, Value: ${_MemoryAccessor.read(i)}`);
+                    }
+        
+                    // Increment the PID for the next process.
+                    _PID++;
+        
+                    _StdOut.putText(`The input is valid and loaded into memory with PID: ${_PID}.`);
+        
+                } else {
+                    _StdOut.putText("The input exceeds the memory capacity.");
+                }
+                
             } else {
                 if (input === "") {
                     _StdOut.putText("The input is empty.");
                 } else {
-                    _StdOut.putText("The input is invalid. Only hex digits are allowed.");
+                    _StdOut.putText("The input is invalid. Only hex digits and spaces are allowed.");
+                }
+            }
+
+            
+
+        }
+        public updateMemoryDisplay(): void {
+            const memoryTable = document.getElementById('memoryTable') as HTMLTableElement;
+            if (memoryTable) {
+                for (let i = 0; i < _Memory.memoryArray.length; i++) {
+                    // Calculate the row and column for the memory value.
+                    const row = Math.floor(i / 8); // Each row has 8 values.
+                    const col = (i % 8) + 1; // +1 to account for the address column (like "0x000").
+        
+                    // Get the row element.
+                    const tableRow = memoryTable.rows[row];
+                    if (tableRow) {
+                        // Get the cell element and update its content.
+                        const tableCell = tableRow.cells[col];
+                        if (tableCell) {
+                            tableCell.textContent = _Memory.memoryArray[i];
+                        }
+                    }
                 }
             }
         }
+        
+        
         
 
        

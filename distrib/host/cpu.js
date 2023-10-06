@@ -66,6 +66,7 @@ var TSOS;
                     this.loadYFromMemory();
                     break;
                 case "EA":
+                    // NOP - No operation needed.
                     this.PC++;
                     break;
                 case "00":
@@ -84,6 +85,7 @@ var TSOS;
                     this.systemCall();
                     break;
                 default:
+                    // Handle invalid opcode.
                     this.isExecuting = false;
                     _Kernel.krnTrace("Invalid OP code: " + opCode);
                     break;

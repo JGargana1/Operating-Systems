@@ -37,7 +37,7 @@ module TSOS {
             _Kernel.krnTrace('CPU cycle');
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
-            let opCode = _MemoryAccessor.read(this.PC);
+             let opCode = _MemoryAccessor.read(this.PC);
 
             switch(opCode) {
                 case "A9":
@@ -65,7 +65,7 @@ module TSOS {
                     this.loadYFromMemory();
                     break;
                 case "EA":
-                    
+                    // NOP - No operation needed.
                     this.PC++;
                     break;
                 case "00":
@@ -84,7 +84,7 @@ module TSOS {
                     this.systemCall();
                     break;
                 default:
-                    
+                    // Handle invalid opcode.
                     this.isExecuting = false;
                     _Kernel.krnTrace("Invalid OP code: " + opCode);
                     break;
@@ -92,6 +92,5 @@ module TSOS {
 
             // TODO: Update the CPU, PCB, and memory displays.
         }
-       
     }
 }
