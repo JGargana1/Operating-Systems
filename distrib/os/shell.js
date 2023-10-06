@@ -320,12 +320,18 @@ var TSOS;
         }
         shellLoad(args) {
             const input = document.getElementById('taProgramInput').value;
-            const isValid = /^[0-9A-Fa-f\s]*$/.test(input);
+            // Modified regex to check only for hexadecimal characters and input is non-empty
+            const isValid = /^[0-9A-Fa-f]+$/.test(input);
             if (isValid) {
                 _StdOut.putText("The input is valid.");
             }
             else {
-                _StdOut.putText("The input is invalid. Only hex digits and spaces are allowed.");
+                if (input === "") {
+                    _StdOut.putText("The input is empty.");
+                }
+                else {
+                    _StdOut.putText("The input is invalid. Only hex digits are allowed.");
+                }
             }
         }
     }
