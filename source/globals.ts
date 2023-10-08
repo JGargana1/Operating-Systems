@@ -53,6 +53,8 @@ var	_Memory:	TSOS.Memory;
 var	_MemoryAccessor:	TSOS.MemoryAccessor;
 
 //	Software	(OS)
+let _Programs: TSOS.Program[] = [];
+
 var	_MemoryManager:	any	=	null;
 
 // Standard input and output

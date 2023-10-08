@@ -1,7 +1,7 @@
 module TSOS {
     export class MemoryAccessor {
 
-        constructor(private memory: Memory) {}
+        constructor(public memory: Memory) {}
 
         public read(address: number): string {
             if (address >= 0 && address < this.memory.memoryArray.length) {
@@ -13,12 +13,22 @@ module TSOS {
         }
 
         public write(address: number, value: string): void {
+            if (this.memory.isOccupied) {
+                _Kernel.krnTrace("Sorry, this memory segment is full.");
+                return;
+            }
+        
             if (address >= 0 && address < this.memory.memoryArray.length) {
                 this.memory.memoryArray[address] = value;
                 this.updateMemoryDisplay(address, value);
             } else {
                 _Kernel.krnTrace(`Invalid memory write address: ${address}`);
             }
+        }
+        
+
+        public clearMemory(): void {
+            this.memory.init();
         }
 
         private updateMemoryDisplay(address: number, value: string): void {
@@ -33,6 +43,5 @@ module TSOS {
                 }
             }
         }
-        
     }
 }

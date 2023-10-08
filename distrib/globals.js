@@ -40,6 +40,7 @@ var _CPU;
 var _Memory;
 var _MemoryAccessor;
 //	Software	(OS)
+let _Programs = [];
 var _MemoryManager = null;
 // Standard input and output
 var _StdIn = null;

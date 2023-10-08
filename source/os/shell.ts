@@ -406,25 +406,31 @@ module TSOS {
             const isValid: boolean = /^[0-9A-Fa-f\s]+$/.test(input);
             
             if (isValid) {
-                const opCodes: string[] = input.split(/\s+/); // Split the input by whitespace to get individual op codes.
+                const opCodes: string[] = input.split(/\s+/);
         
-                if (opCodes.length <= 256) { // Checking if the input does not exceed memory capacity.
-                    // Load the op codes into memory starting from location $0000.
-                    for (let i = 0; i < opCodes.length; i++) {
-                        // Use MemoryAccessor to write op codes to memory.
-                        _MemoryAccessor.write(i, opCodes[i]);
-                        console.log(`Address: ${i}, Value: ${_MemoryAccessor.read(i)}`);
+                if (opCodes.length <= 256) {
+                    const endAddress = opCodes.length - 1;
+        
+                    if (!_MemoryAccessor.memory.isOccupied) {
+                        let newProgram = new Program(_PID, 0, endAddress);
+                        _Programs.push(newProgram);
+                    
+                        for (let i = 0; i < opCodes.length; i++) {
+                            _MemoryAccessor.write(i, opCodes[i]);
+                        }
+                    
+                        _MemoryAccessor.memory.isOccupied = true;
+                    
+                        _StdOut.putText(`Program loaded with PID: ${_PID}`);
+                    
+                        _PID++;
+                    } else {
+                        _StdOut.putText("Sorry, this memory segment is full.");
                     }
-        
-                    // Increment the PID for the next process.
-                    _PID++;
-        
-                    _StdOut.putText(`The input is valid and loaded into memory with PID: ${_PID}.`);
-        
+                    
                 } else {
                     _StdOut.putText("The input exceeds the memory capacity.");
-                }
-                
+                }  
             } else {
                 if (input === "") {
                     _StdOut.putText("The input is empty.");
@@ -432,30 +438,10 @@ module TSOS {
                     _StdOut.putText("The input is invalid. Only hex digits and spaces are allowed.");
                 }
             }
-
-            
-
         }
-        public updateMemoryDisplay(): void {
-            const memoryTable = document.getElementById('memoryTable') as HTMLTableElement;
-            if (memoryTable) {
-                for (let i = 0; i < _Memory.memoryArray.length; i++) {
-                    // Calculate the row and column for the memory value.
-                    const row = Math.floor(i / 8); // Each row has 8 values.
-                    const col = (i % 8) + 1; // +1 to account for the address column (like "0x000").
         
-                    // Get the row element.
-                    const tableRow = memoryTable.rows[row];
-                    if (tableRow) {
-                        // Get the cell element and update its content.
-                        const tableCell = tableRow.cells[col];
-                        if (tableCell) {
-                            tableCell.textContent = _Memory.memoryArray[i];
-                        }
-                    }
-                }
-            }
-        }
+        
+        
         
         
         
