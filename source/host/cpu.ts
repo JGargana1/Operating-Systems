@@ -15,6 +15,8 @@ module TSOS {
 
     export class Cpu {
 
+        
+
         constructor(public PC: number = 0,
                     public Acc: number = 0,
                     public Xreg: number = 0,
@@ -37,6 +39,8 @@ module TSOS {
             this.isExecuting = true;
             this.cycle();
         }
+
+        
         
 
         public cycle(): void {
@@ -48,6 +52,8 @@ module TSOS {
                     return;
                 }
                 let opCode = _MemoryAccessor.read(this.PC).toUpperCase();  
+
+                
 
 
             switch(opCode) {
@@ -109,6 +115,7 @@ module TSOS {
                 this.PC++;  // Increment to get the constant.
                 this.Acc = parseInt(_MemoryAccessor.read(this.PC), 16);
                 this.PC++;  // Increment to point to the next opcode.
+                
             } catch (error) {
                 _Kernel.krnTrace(error.message);
             }
@@ -128,6 +135,7 @@ module TSOS {
         
                 this.Acc = parseInt(_MemoryAccessor.read(address), 16);
                 this.PC++;  // Move to the next opcode.
+                
             } catch (error) {
                 _Kernel.krnTrace(error.message);
             }
@@ -148,6 +156,7 @@ module TSOS {
         
                 _MemoryAccessor.write(address, this.Acc.toString(16).toUpperCase());
                 this.PC++;  // Move to the next opcode.
+                
             } catch (error) {
                 _Kernel.krnTrace(error.message);
             }
@@ -169,6 +178,7 @@ module TSOS {
         
                 this.Acc += parseInt(_MemoryAccessor.read(address), 16);
                 this.PC++;  // Move to the next opcode.
+                
             } catch (error) {
                 _Kernel.krnTrace(error.message);
             }
@@ -182,6 +192,7 @@ module TSOS {
                 this.PC++;  // Increment to get the constant.
                 this.Xreg = parseInt(_MemoryAccessor.read(this.PC), 16);
                 this.PC++;  // Increment to point to the next opcode.
+                
             } catch (error) {
                 _Kernel.krnTrace(error.message);
             }
@@ -202,6 +213,7 @@ module TSOS {
         
                 this.Xreg = parseInt(_MemoryAccessor.read(address), 16);
                 this.PC++;  // Move to the next opcode.
+                
             } catch (error) {
                 _Kernel.krnTrace(error.message);
             }
@@ -215,6 +227,7 @@ module TSOS {
                 this.PC++;  // Increment to get the constant.
                 this.Yreg = parseInt(_MemoryAccessor.read(this.PC), 16);
                 this.PC++;  // Increment to point to the next opcode.
+                
             } catch (error) {
                 _Kernel.krnTrace(error.message);
             }
@@ -234,6 +247,7 @@ module TSOS {
         
                 this.Yreg = parseInt(_MemoryAccessor.read(address), 16);
                 this.PC++;  // Move to the next opcode.
+                
             } catch (error) {
                 _Kernel.krnTrace(error.message);
             }
@@ -244,6 +258,7 @@ module TSOS {
         // Break operation.
         private break(): void {
             this.isExecuting = false;
+            
             // Don't increment the PC here.
         }
         
@@ -263,6 +278,7 @@ module TSOS {
                 let value = parseInt(_MemoryAccessor.read(address), 16);
                 this.Zflag = (value === this.Xreg) ? 1 : 0;
                 this.PC++;  // Move to the next opcode.
+                
             } catch (error) {
                 _Kernel.krnTrace(error.message);
             }
@@ -280,6 +296,7 @@ module TSOS {
                     offset = offset - 0x100;  // Convert to a negative number
                 }
                 this.PC += offset;
+                
         
                 // Wrap around if PC exceeds memory size
                 while (this.PC >= _MemoryAccessor.getMemorySize()) {
@@ -287,6 +304,7 @@ module TSOS {
                 }
             } else {
                 this.PC++;
+                
             }
         }
         
@@ -307,6 +325,7 @@ module TSOS {
                 let value = parseInt(_MemoryAccessor.read(address), 16);
                 _MemoryAccessor.write(address, (value + 1).toString(16).toUpperCase());
                 this.PC++;  // Move to the next opcode.
+                
             } catch (error) {
                 _Kernel.krnTrace(error.message);
             }
@@ -345,7 +364,15 @@ module TSOS {
                 _StdOut.putText(unrecognizedOutput);
             }
             this.PC++;
+            
         }
+        
+        
+        
+        
+        
+        
+        
         
 
 

@@ -234,6 +234,7 @@ var TSOS;
                 let value = parseInt(_MemoryAccessor.read(address), 16);
                 this.Zflag = (value === this.Xreg) ? 1 : 0;
                 this.PC++; // Move to the next opcode.
+                this.updatePCB();
             }
             catch (error) {
                 _Kernel.krnTrace(error.message);
