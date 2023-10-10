@@ -27,7 +27,9 @@ const KEYBOARD_IRQ: number = 1;
 //
 
 var _PID: number = 0;
+
 var _CPU: TSOS.Cpu;  // Utilize TypeScript's type annotation system to ensure that _CPU is an instance of the Cpu class.
+
 
 var _OSclock: number = 0;  // Page 23.
 

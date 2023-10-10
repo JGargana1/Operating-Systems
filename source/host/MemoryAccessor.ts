@@ -4,27 +4,42 @@ module TSOS {
         constructor(public memory: Memory) {}
 
         public read(address: number): string {
-            if (address >= 0 && address < this.memory.memoryArray.length) {
-                return this.memory.memoryArray[address];
-            } else {
-                _Kernel.krnTrace(`Invalid memory read address: ${address}`);
-                return "00";
+            if (address < 0 || address >= this.memory.memoryArray.length) {
+                _Kernel.krnTrace(`Invalid memory read at address ${address}`);
+                throw new Error(`Invalid memory read at address ${address}`);
             }
+
+            _Kernel.krnTrace(`Reading memory at address ${address}`);
+
+            return this.memory.memoryArray[address];
+        }
+        
+        public write(address: number, value: string): void {
+            
+            
+            if (address < 0 || address >= this.memory.memoryArray.length) {
+
+                console.log(`Attempt to write value ${value} to invalid memory address ${address.toString(16).toUpperCase().padStart(4, '0')}`);
+                _Kernel.krnTrace(`Invalid memory write at address ${address}`);
+                throw new Error(`Invalid memory write at address ${address}`);
+            }
+            console.log(`Writing value ${value} to memory address ${address.toString(16).toUpperCase().padStart(4, '0')}`);
+            
+            
+        
+            _Kernel.krnTrace(`Writing to memory at address ${address} with value ${value}`);
+            this.updateMemoryDisplay(address, value);  
+            this.memory.memoryArray[address] = value;
+            this.memory.setByteOccupied(address, true);
+        }
+        
+        
+
+        public getMemorySize(): number {
+            return this.memory.memoryArray.length;
         }
 
-        public write(address: number, value: string): void {
-            if (this.memory.isOccupied) {
-                _Kernel.krnTrace("Sorry, this memory segment is full.");
-                return;
-            }
         
-            if (address >= 0 && address < this.memory.memoryArray.length) {
-                this.memory.memoryArray[address] = value;
-                this.updateMemoryDisplay(address, value);
-            } else {
-                _Kernel.krnTrace(`Invalid memory write address: ${address}`);
-            }
-        }
         
 
         public clearMemory(): void {
@@ -43,5 +58,9 @@ module TSOS {
                 }
             }
         }
+        public findFreeSpace(requiredSize: number): number {
+            return this.memory.findFreeSpace(requiredSize);
+        }
+        
     }
 }

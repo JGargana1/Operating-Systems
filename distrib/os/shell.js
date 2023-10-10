@@ -63,6 +63,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellStatus, "status", "<string> - Set the status message.");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRun, "run", "runs specified");
+            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -320,30 +322,28 @@ var TSOS;
         }
         shellLoad(args) {
             const input = document.getElementById('taProgramInput').value;
+            if (_MemoryAccessor.memory.isMemoryOccupied()) {
+                _StdOut.putText("Memory is already occupied by another program. Cannot load a new program.");
+                return;
+            }
             // Validate that the input is not empty and contains only valid hexadecimal characters.
             const isValid = /^[0-9A-Fa-f\s]+$/.test(input);
             if (isValid) {
                 const opCodes = input.split(/\s+/);
                 if (opCodes.length <= 256) {
-                    // Find the end address of the program in memory.
-                    const endAddress = opCodes.length - 1;
-                    // If memory is not occupied, assign a new PID.
-                    if (!_MemoryAccessor.memory.isOccupied) {
-                        let newProgram = new TSOS.Program(_PID, 0, endAddress);
+                    // Find the starting address of the first unoccupied space of required size
+                    const startingAddress = _MemoryAccessor.findFreeSpace(opCodes.length);
+                    if (startingAddress !== -1) {
+                        let newProgram = new TSOS.Program(_PID, startingAddress, startingAddress + opCodes.length - 1);
                         _Programs.push(newProgram);
-                        // Load the op codes into memory.
                         for (let i = 0; i < opCodes.length; i++) {
-                            _MemoryAccessor.write(i, opCodes[i]);
+                            _MemoryAccessor.write(startingAddress + i, opCodes[i]);
                         }
-                        // Mark the memory segment as occupied.
-                        _MemoryAccessor.memory.isOccupied = true;
-                        // Display the PID to the console.
                         _StdOut.putText(`Program loaded with PID: ${_PID}`);
-                        // Increment the PID for the next program.
                         _PID++;
                     }
                     else {
-                        _StdOut.putText("Sorry, this memory segment is full.");
+                        _StdOut.putText("Sorry, there is not enough consecutive memory space for this program.");
                     }
                 }
                 else {
@@ -358,6 +358,23 @@ var TSOS;
                     _StdOut.putText("The input is invalid. Only hex digits and spaces are allowed.");
                 }
             }
+        }
+        shellRun(args) {
+            if (args.length === 0) {
+                _StdOut.putText("Please specify a PID to run.");
+                return;
+            }
+            const pid = parseInt(args[0]);
+            // Locate the program by its PID
+            const programToRun = _Programs.find(program => program.PID === pid);
+            if (!programToRun) {
+                _StdOut.putText(`No program with PID: ${pid} found.`);
+                return;
+            }
+            // Set up the CPU to execute the program
+            _CPU.PC = programToRun.startAddress; // Set Program Counter to the starting address of the program
+            _CPU.isExecuting = true; // Set the CPU to execution mode
+            _StdOut.putText(`Running program with PID: ${pid}`);
         }
     }
     TSOS.Shell = Shell;
