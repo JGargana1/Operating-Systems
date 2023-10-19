@@ -39,7 +39,6 @@ module TSOS {
         
         public run(): void {
             this.isExecuting = true;
-            this.updateStatus('running');
             this.cycle();
         }
 
@@ -65,7 +64,7 @@ module TSOS {
                 if (this.PC < 0 || this.PC >= _MemoryAccessor.getMemorySize()) {
                     _Kernel.krnTrace('Program counter out of memory bounds: ' + this.PC);
                     this.isExecuting = false;
-                    this.updateStatus('terminated');
+                    
                     return;
                 }
                 let opCode = _MemoryAccessor.read(this.PC).toUpperCase();  
@@ -126,6 +125,7 @@ module TSOS {
                     
             }
             this.displayCPUStatus();
+            
         }
 
             // TODO: Update the CPU, PCB, and memory displays.
@@ -389,33 +389,39 @@ module TSOS {
             console.log("Z Flag:", this.Zflag);
         
             this.updatePCBDisplay();
+            this.updateCpuDisplay();
         }
         
 
-        private updateStatus(status: string): void {
-            switch (status) {
-                case 'loaded':
-                    console.log("PCB Status: Resident");
-                    break;
-                case 'running':
-                    console.log("PCB Status: Running");
-                    break;
-                case 'terminated':
-                    console.log("PCB Status: Terminated");
-                    break;
-                default:
-                    console.log("PCB Status: Unknown");
-                    break;
-            }
-        }
+    
         private updatePCBDisplay(): void {
-            document.getElementById('state')!.textContent = this.isExecuting ? 'Running' : 'Not Running';
+            const currentState = this.isExecuting ? 'Running' : 'Terminated';
+            document.getElementById('state')!.textContent = currentState;
             document.getElementById('counter')!.textContent = this.PC.toString();
             document.getElementById('acc')!.textContent = this.Acc.toString();
             document.getElementById('x')!.textContent = this.Xreg.toString();
             document.getElementById('y')!.textContent = this.Yreg.toString();
             document.getElementById('z')!.textContent = this.Zflag.toString();
+        
+            if (currentState === 'Terminated') {
+                const program = _Programs.find(p => this.PC >= p.startAddress && this.PC <= p.endAddress);
+                if (program && !_TerminatedPrograms.includes(program.PID)) {
+                    _TerminatedPrograms.push(program.PID);
+                }
+            }
         }
+        private updateCpuDisplay(): void {
+            
+            
+            document.getElementById('cpu_counter')!.textContent = this.PC.toString();
+            document.getElementById('cpu_acc')!.textContent = this.Acc.toString();
+            document.getElementById('cpu_x')!.textContent = this.Xreg.toString();
+            document.getElementById('cpu_y')!.textContent = this.Yreg.toString();
+            document.getElementById('cpu_z')!.textContent = this.Zflag.toString();
+        
+            
+        }
+        
         
         
         

@@ -25,6 +25,7 @@ const KEYBOARD_IRQ: number = 1;
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
 //
+let _TerminatedPrograms: number[] = [];
 
 var _PID: number = 0;
 

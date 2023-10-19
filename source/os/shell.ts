@@ -431,6 +431,9 @@ module TSOS {
                         _StdOut.putText(`Program loaded with PID: ${_PID}`);
 
                         document.getElementById('pid')!.textContent = _PID.toString();
+
+                        document.getElementById('state')!.textContent = "resident";
+
                     
                         _PID++;
                     } else {
@@ -466,12 +469,19 @@ module TSOS {
                 return;
             }
         
+            // Check if the program is terminated
+            if (_TerminatedPrograms.includes(programToRun.PID)) {
+                _StdOut.putText(`Sorry, this program has been terminated.`);
+                return;
+            }
+        
             // Set up the CPU to execute the program
             _CPU.PC = programToRun.startAddress; // Set Program Counter to the starting address of the program
             _CPU.isExecuting = true;             // Set the CPU to execution mode
         
             _StdOut.putText(`Running program with PID: ${pid}`);
         }
+        
         
         
         

@@ -341,6 +341,7 @@ var TSOS;
                         }
                         _StdOut.putText(`Program loaded with PID: ${_PID}`);
                         document.getElementById('pid').textContent = _PID.toString();
+                        document.getElementById('state').textContent = "resident";
                         _PID++;
                     }
                     else {
@@ -370,6 +371,11 @@ var TSOS;
             const programToRun = _Programs.find(program => program.PID === pid);
             if (!programToRun) {
                 _StdOut.putText(`No program with PID: ${pid} found.`);
+                return;
+            }
+            // Check if the program is terminated
+            if (_TerminatedPrograms.includes(programToRun.PID)) {
+                _StdOut.putText(`Sorry, this program has been terminated.`);
                 return;
             }
             // Set up the CPU to execute the program
