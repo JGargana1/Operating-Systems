@@ -314,7 +314,6 @@ var TSOS;
             this.PC++;
         }
         displayCPUStatus() {
-            // Display CPU Status in console logs
             console.log("CPU Status:");
             console.log("Program Counter:", this.PC);
             console.log("Instruction Register:", _MemoryAccessor.read(this.PC).toUpperCase());
@@ -322,9 +321,9 @@ var TSOS;
             console.log("X Register:", this.Xreg);
             console.log("Y Register:", this.Yreg);
             console.log("Z Flag:", this.Zflag);
+            this.updatePCBDisplay();
         }
         updateStatus(status) {
-            // Update and log the status of the PCB
             switch (status) {
                 case 'loaded':
                     console.log("PCB Status: Resident");
@@ -339,6 +338,14 @@ var TSOS;
                     console.log("PCB Status: Unknown");
                     break;
             }
+        }
+        updatePCBDisplay() {
+            document.getElementById('state').textContent = this.isExecuting ? 'Running' : 'Not Running';
+            document.getElementById('counter').textContent = this.PC.toString();
+            document.getElementById('acc').textContent = this.Acc.toString();
+            document.getElementById('x').textContent = this.Xreg.toString();
+            document.getElementById('y').textContent = this.Yreg.toString();
+            document.getElementById('z').textContent = this.Zflag.toString();
         }
     }
     TSOS.Cpu = Cpu;

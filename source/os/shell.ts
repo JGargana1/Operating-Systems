@@ -429,6 +429,8 @@ module TSOS {
                         }
                     
                         _StdOut.putText(`Program loaded with PID: ${_PID}`);
+
+                        document.getElementById('pid')!.textContent = _PID.toString();
                     
                         _PID++;
                     } else {
