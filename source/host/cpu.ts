@@ -17,6 +17,8 @@ module TSOS {
 
         
 
+        
+
         constructor(public PC: number = 0,
                     public Acc: number = 0,
                     public Xreg: number = 0,
@@ -37,7 +39,21 @@ module TSOS {
         
         public run(): void {
             this.isExecuting = true;
+            this.updateStatus('running');
             this.cycle();
+        }
+
+
+        public logStatus(): void {
+            console.log(`----- CPU Status -----`);
+            console.log(`Program Counter (PC): ${this.PC}`);
+            console.log(`Instruction Register (Opcode): ${_MemoryAccessor.read(this.PC)}`);
+            console.log(`Accumulator (Acc): ${this.Acc}`);
+            console.log(`X Register (Xreg): ${this.Xreg}`);
+            console.log(`Y Register (Yreg): ${this.Yreg}`);
+            console.log(`Z Flag (Zflag): ${this.Zflag}`);
+            console.log(`Is Executing: ${this.isExecuting}`);
+            console.log(`----------------------`);
         }
 
         
@@ -49,6 +65,7 @@ module TSOS {
                 if (this.PC < 0 || this.PC >= _MemoryAccessor.getMemorySize()) {
                     _Kernel.krnTrace('Program counter out of memory bounds: ' + this.PC);
                     this.isExecuting = false;
+                    this.updateStatus('terminated');
                     return;
                 }
                 let opCode = _MemoryAccessor.read(this.PC).toUpperCase();  
@@ -105,7 +122,10 @@ module TSOS {
                     this.isExecuting = false;
                     _Kernel.krnTrace("Invalid OP code: " + opCode);
                     break;
+
+                    
             }
+            this.displayCPUStatus();
         }
 
             // TODO: Update the CPU, PCB, and memory displays.
@@ -290,23 +310,16 @@ module TSOS {
         // Branch n bytes if Z flag = 0.
         private branchNBytesIfZFlagIs0(): void {
             this.PC++;
-            if (this.Zflag === 0) {
-                let offset = parseInt(_MemoryAccessor.read(this.PC), 16);
-                if (offset > 0x7F) {  // If offset is negative in two's complement
-                    offset = offset - 0x100;  // Convert to a negative number
-                }
-                this.PC += offset;
-                
-        
-                // Wrap around if PC exceeds memory size
-                while (this.PC >= _MemoryAccessor.getMemorySize()) {
-                    this.PC -= _MemoryAccessor.getMemorySize();
-                }
+            if (this.Zflag ===0) {
+                let offset = parseInt (_MemoryAccessor.read(this.PC), 16);
+                let old = this.PC
+                this.PC = (this.PC + 1 + offset) % _MemoryAccessor.getMemorySize();
+                console.log("Jumping from ", old, " to ", this.PC);
             } else {
                 this.PC++;
-                
             }
         }
+        
         
 
 
@@ -366,6 +379,37 @@ module TSOS {
             this.PC++;
             
         }
+        private displayCPUStatus(): void {
+            // Display CPU Status in console logs
+            console.log("CPU Status:");
+            console.log("Program Counter:", this.PC);
+            console.log("Instruction Register:", _MemoryAccessor.read(this.PC).toUpperCase());
+            console.log("Accumulator:", this.Acc);
+            console.log("X Register:", this.Xreg);
+            console.log("Y Register:", this.Yreg);
+            console.log("Z Flag:", this.Zflag);
+
+            
+        }
+
+        private updateStatus(status: string): void {
+            // Update and log the status of the PCB
+            switch (status) {
+                case 'loaded':
+                    console.log("PCB Status: Resident");
+                    break;
+                case 'running':
+                    console.log("PCB Status: Running");
+                    break;
+                case 'terminated':
+                    console.log("PCB Status: Terminated");
+                    break;
+                default:
+                    console.log("PCB Status: Unknown");
+                    break;
+            }
+        }
+        
         
         
         

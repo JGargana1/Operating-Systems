@@ -37,7 +37,19 @@ var TSOS;
         }
         run() {
             this.isExecuting = true;
+            this.updateStatus('running');
             this.cycle();
+        }
+        logStatus() {
+            console.log(`----- CPU Status -----`);
+            console.log(`Program Counter (PC): ${this.PC}`);
+            console.log(`Instruction Register (Opcode): ${_MemoryAccessor.read(this.PC)}`);
+            console.log(`Accumulator (Acc): ${this.Acc}`);
+            console.log(`X Register (Xreg): ${this.Xreg}`);
+            console.log(`Y Register (Yreg): ${this.Yreg}`);
+            console.log(`Z Flag (Zflag): ${this.Zflag}`);
+            console.log(`Is Executing: ${this.isExecuting}`);
+            console.log(`----------------------`);
         }
         cycle() {
             _Kernel.krnTrace('CPU cycle');
@@ -45,6 +57,7 @@ var TSOS;
                 if (this.PC < 0 || this.PC >= _MemoryAccessor.getMemorySize()) {
                     _Kernel.krnTrace('Program counter out of memory bounds: ' + this.PC);
                     this.isExecuting = false;
+                    this.updateStatus('terminated');
                     return;
                 }
                 let opCode = _MemoryAccessor.read(this.PC).toUpperCase();
@@ -98,6 +111,7 @@ var TSOS;
                         _Kernel.krnTrace("Invalid OP code: " + opCode);
                         break;
                 }
+                this.displayCPUStatus();
             }
             // TODO: Update the CPU, PCB, and memory displays.
         }
@@ -234,7 +248,6 @@ var TSOS;
                 let value = parseInt(_MemoryAccessor.read(address), 16);
                 this.Zflag = (value === this.Xreg) ? 1 : 0;
                 this.PC++; // Move to the next opcode.
-                this.updatePCB();
             }
             catch (error) {
                 _Kernel.krnTrace(error.message);
@@ -245,14 +258,9 @@ var TSOS;
             this.PC++;
             if (this.Zflag === 0) {
                 let offset = parseInt(_MemoryAccessor.read(this.PC), 16);
-                if (offset > 0x7F) { // If offset is negative in two's complement
-                    offset = offset - 0x100; // Convert to a negative number
-                }
-                this.PC += offset;
-                // Wrap around if PC exceeds memory size
-                while (this.PC >= _MemoryAccessor.getMemorySize()) {
-                    this.PC -= _MemoryAccessor.getMemorySize();
-                }
+                let old = this.PC;
+                this.PC = (this.PC + 1 + offset) % _MemoryAccessor.getMemorySize();
+                console.log("Jumping from ", old, " to ", this.PC);
             }
             else {
                 this.PC++;
@@ -304,6 +312,33 @@ var TSOS;
                 _StdOut.putText(unrecognizedOutput);
             }
             this.PC++;
+        }
+        displayCPUStatus() {
+            // Display CPU Status in console logs
+            console.log("CPU Status:");
+            console.log("Program Counter:", this.PC);
+            console.log("Instruction Register:", _MemoryAccessor.read(this.PC).toUpperCase());
+            console.log("Accumulator:", this.Acc);
+            console.log("X Register:", this.Xreg);
+            console.log("Y Register:", this.Yreg);
+            console.log("Z Flag:", this.Zflag);
+        }
+        updateStatus(status) {
+            // Update and log the status of the PCB
+            switch (status) {
+                case 'loaded':
+                    console.log("PCB Status: Resident");
+                    break;
+                case 'running':
+                    console.log("PCB Status: Running");
+                    break;
+                case 'terminated':
+                    console.log("PCB Status: Terminated");
+                    break;
+                default:
+                    console.log("PCB Status: Unknown");
+                    break;
+            }
         }
     }
     TSOS.Cpu = Cpu;
