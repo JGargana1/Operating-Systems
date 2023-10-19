@@ -63,7 +63,7 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellStatus, "status", "<string> - Set the status message.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellRun, "run", "runs specified");
+            sc = new TSOS.ShellCommand(this.shellRun, "run", "- run 'PID'");
             this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();

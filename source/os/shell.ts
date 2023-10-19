@@ -120,7 +120,7 @@ module TSOS {
             sc = new ShellCommand(this.shellStatus, "status", "<string> - Set the status message.");
             this.commandList[this.commandList.length] = sc;
 
-            sc = new ShellCommand(this.shellRun, "run", "runs specified");
+            sc = new ShellCommand(this.shellRun, "run", "- run 'PID'");
             this.commandList[this.commandList.length] = sc;
 
 
