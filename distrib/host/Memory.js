@@ -1,44 +1,51 @@
 var TSOS;
 (function (TSOS) {
     class Memory {
-        size;
-        memoryArray;
+        segments;
+        segmentSize;
+        memorySegments;
         byteOccupiedFlags;
-        constructor(size = 256) {
-            this.size = size;
-            this.memoryArray = new Array(size).fill("00");
-            // Initialize the byteOccupiedFlags
-            this.byteOccupiedFlags = new Array(size).fill(false);
+        constructor(segments = 3, segmentSize = 256) {
+            this.segments = segments;
+            this.segmentSize = segmentSize;
+            this.memorySegments = new Array(segments).fill([]).map(_ => new Array(segmentSize).fill("00"));
+            this.byteOccupiedFlags = new Array(segments).fill([]).map(_ => new Array(segmentSize).fill(false));
         }
         init() {
-            for (let i = 0; i < this.size; i++) {
-                this.memoryArray[i] = "00";
-                this.byteOccupiedFlags[i] = false;
+            for (let segment = 0; segment < this.segments; segment++) {
+                for (let i = 0; i < this.segmentSize; i++) {
+                    this.memorySegments[segment][i] = "00";
+                    this.byteOccupiedFlags[segment][i] = false;
+                }
             }
         }
-        isByteOccupied(address) {
-            return this.byteOccupiedFlags[address];
+        isByteOccupied(segment, address) {
+            return this.byteOccupiedFlags[segment][address];
         }
-        setByteOccupied(address, occupied) {
-            this.byteOccupiedFlags[address] = occupied;
+        setByteOccupied(segment, address, occupied) {
+            this.byteOccupiedFlags[segment][address] = occupied;
         }
-        findFreeSpace(requiredSize) {
-            let freeCount = 0;
-            for (let i = 0; i < this.size; i++) {
-                if (!this.isByteOccupied(i)) {
-                    freeCount++;
-                    if (freeCount === requiredSize) {
-                        return i - requiredSize + 1;
-                    }
-                }
-                else {
-                    freeCount = 0;
+        findFreeSegmentStartAddress() {
+            for (let segment = 0; segment < this.segments; segment++) {
+                if (!this.byteOccupiedFlags[segment].some(flag => flag)) {
+                    return 0;
                 }
             }
             return -1;
         }
         isMemoryOccupied() {
-            return this.byteOccupiedFlags.some(flag => flag);
+            return this.byteOccupiedFlags.flat().some(flag => flag);
+        }
+        findFreeSegment() {
+            for (let segment = 0; segment < this.segments; segment++) {
+                if (!this.isSegmentOccupied(segment)) {
+                    return segment;
+                }
+            }
+            return -1;
+        }
+        isSegmentOccupied(segment) {
+            return this.byteOccupiedFlags[segment].some(flag => flag);
         }
     }
     TSOS.Memory = Memory;

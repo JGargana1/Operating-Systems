@@ -20,6 +20,9 @@ const KEYBOARD_IRQ = 1;
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
 //
+let _MemorySegments;
+let _MemoryAccessors;
+let _currentMemorySegment;
 let _TerminatedPrograms = [];
 var _PID = 0;
 var _CPU; // Utilize TypeScript's type annotation system to ensure that _CPU is an instance of the Cpu class.
@@ -37,7 +40,6 @@ var _KernelInterruptQueue = null;
 var _KernelInputQueue = null;
 var _KernelBuffers = null;
 //	Hardware	(host)
-var _CPU;
 var _Memory;
 var _MemoryAccessor;
 //	Software	(OS)
@@ -58,6 +60,9 @@ var _hardwareClockID = null;
 var Glados = null; // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
 var _GLaDOS = null; // If the above is linked in, this is the instantiated instance of Glados.
 var onDocumentLoad = function () {
+    _MemorySegments = [new TSOS.Memory(), new TSOS.Memory(), new TSOS.Memory()];
+    _MemoryAccessors = _MemorySegments.map(segment => new TSOS.MemoryAccessor(segment));
+    _currentMemorySegment = 0;
     TSOS.Control.hostInit();
 };
 //# sourceMappingURL=globals.js.map

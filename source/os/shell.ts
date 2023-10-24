@@ -404,41 +404,51 @@ module TSOS {
         
         public shellLoad(args: string[]): void {
             const input: string = (document.getElementById('taProgramInput') as HTMLInputElement).value;
-            
-            if (_MemoryAccessor.memory.isMemoryOccupied()) {
-                _StdOut.putText("Memory is already occupied by another program. Cannot load a new program.");
+        
+            if (_MemoryAccessors.every(accessor => accessor.memory.isMemoryOccupied())) {
+                _StdOut.putText("Sorry, all memory segments are full.");
                 return;
             }
-            
+        
             // Validate that the input is not empty and contains only valid hexadecimal characters.
             const isValid: boolean = /^[0-9A-Fa-f\s]+$/.test(input);
-            
+        
             if (isValid) {
                 const opCodes: string[] = input.split(/\s+/);
-            
-                if (opCodes.length <= 256) {
-                    // Find the starting address of the first unoccupied space of required size
-                    const startingAddress = _MemoryAccessor.findFreeSpace(opCodes.length);
         
-                    if (startingAddress !== -1) {
+                if (opCodes.length <= 256) {
+                    let loaded = false; 
+                    let segment: number = -1;
+        
+                    for (let i = 0; i < _MemoryAccessors.length; i++) {
+                        if (!_MemoryAccessors[i].memory.isSegmentOccupied(i)) {
+                            segment = i;
+                            break;
+                        }
+                    }
+        
+                    if (segment !== -1) {
+                        let startingAddress = 0; // Always 0 since we're loading at the start of a segment.
+        
                         let newProgram = new Program(_PID, startingAddress, startingAddress + opCodes.length - 1);
                         _Programs.push(newProgram);
-                    
+        
                         for (let i = 0; i < opCodes.length; i++) {
-                            _MemoryAccessor.write(startingAddress + i, opCodes[i]);
+                            _MemoryAccessors[segment].write(segment, startingAddress + i, opCodes[i]);
+        
+                            console.log(`Loaded value ${opCodes[i]} to address ${startingAddress + i} in segment ${segment}`);
                         }
-                    
-                        _StdOut.putText(`Program loaded with PID: ${_PID}`);
-
+        
+                        _StdOut.putText(`Program loaded with PID: ${_PID} in segment ${segment}`);
                         document.getElementById('pid')!.textContent = _PID.toString();
-
                         document.getElementById('state')!.textContent = "resident";
-
-                    
                         _PID++;
-                    } else {
+                        loaded = true;
+                    }
+        
+                    if (!loaded) {
                         _StdOut.putText("Sorry, there is not enough consecutive memory space for this program.");
-                    }  
+                    }
                 } else {
                     _StdOut.putText("The input exceeds the memory capacity.");
                 }
@@ -450,6 +460,8 @@ module TSOS {
                 }
             }
         }
+        
+        
         
         
 

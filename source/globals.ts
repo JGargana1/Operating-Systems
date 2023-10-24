@@ -21,10 +21,16 @@ const TIMER_IRQ: number = 0;  // Pages 23 (timer), 9 (interrupts), and 561 (inte
 const KEYBOARD_IRQ: number = 1;
 
 
+
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
 //
+
+let _MemorySegments: TSOS.Memory[];
+let _MemoryAccessors: TSOS.MemoryAccessor[];
+let _currentMemorySegment: number;
+
 let _TerminatedPrograms: number[] = [];
 
 var _PID: number = 0;
@@ -51,7 +57,7 @@ var _KernelInputQueue: TSOS.Queue = null;
 var _KernelBuffers = null; 
 
 //	Hardware	(host)
-var	_CPU:	TSOS.Cpu;
+
 var	_Memory:	TSOS.Memory;
 var	_MemoryAccessor:	TSOS.MemoryAccessor;
 
@@ -81,5 +87,9 @@ var Glados: any = null;  // This is the function Glados() in glados-ip*.js http:
 var _GLaDOS: any = null; // If the above is linked in, this is the instantiated instance of Glados.
 
 var onDocumentLoad = function() {
-	TSOS.Control.hostInit();
+   _MemorySegments = [new TSOS.Memory(), new TSOS.Memory(), new TSOS.Memory()];
+   _MemoryAccessors = _MemorySegments.map(segment => new TSOS.MemoryAccessor(segment));
+   _currentMemorySegment = 0;
+   TSOS.Control.hostInit();
 };
+

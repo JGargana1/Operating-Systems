@@ -5,28 +5,28 @@ var TSOS;
         constructor(memory) {
             this.memory = memory;
         }
-        read(address) {
-            if (address < 0 || address >= this.memory.memoryArray.length) {
-                _Kernel.krnTrace(`Invalid memory read at address ${address}`);
-                throw new Error(`Invalid memory read at address ${address}`);
+        read(segment, address) {
+            if (address < 0 || address >= this.memory.memorySegments[segment].length) {
+                _Kernel.krnTrace(`Invalid memory read at segment ${segment} and address ${address}`);
+                throw new Error(`Invalid memory read at segment ${segment} and address ${address}`);
             }
-            _Kernel.krnTrace(`Reading memory at address ${address}`);
-            return this.memory.memoryArray[address];
+            _Kernel.krnTrace(`Reading memory at segment ${segment} and address ${address}`);
+            return this.memory.memorySegments[segment][address];
         }
-        write(address, value) {
-            if (address < 0 || address >= this.memory.memoryArray.length) {
+        write(segment, address, value) {
+            if (address < 0 || address >= this.memory.memorySegments[segment].length) {
                 console.log(`Attempt to write value ${value} to invalid memory address ${address.toString(16).toUpperCase().padStart(4, '0')}`);
-                _Kernel.krnTrace(`Invalid memory write at address ${address}`);
-                throw new Error(`Invalid memory write at address ${address}`);
+                _Kernel.krnTrace(`Invalid memory write at segment ${segment} and address ${address}`);
+                throw new Error(`Invalid memory write at segment ${segment} and address ${address}`);
             }
-            console.log(`Writing value ${value} to memory address ${address.toString(16).toUpperCase().padStart(4, '0')}`);
-            _Kernel.krnTrace(`Writing to memory at address ${address} with value ${value}`);
-            this.updateMemoryDisplay(address, value);
-            this.memory.memoryArray[address] = value;
-            this.memory.setByteOccupied(address, true);
+            //console.log(`Writing value ${value} to memory segment ${segment} and address ${address.toString(16).toUpperCase().padStart(4, '0')}`);
+            _Kernel.krnTrace(`Writing to memory at segment ${segment} and address ${address} with value ${value}`);
+            //this.updateMemoryDisplay(segment, address, value); 
+            this.memory.memorySegments[segment][address] = value;
+            this.memory.setByteOccupied(segment, address, true);
         }
         getMemorySize() {
-            return this.memory.memoryArray.length;
+            return this.memory.memorySegments.length;
         }
         clearMemory() {
             this.memory.init();
@@ -42,8 +42,11 @@ var TSOS;
                 }
             }
         }
-        findFreeSpace(requiredSize) {
-            return this.memory.findFreeSpace(requiredSize);
+        findFreeSegment() {
+            return this.memory.findFreeSegment();
+        }
+        findFreeSegmentStartAddress() {
+            return this.memory.findFreeSegmentStartAddress();
         }
     }
     TSOS.MemoryAccessor = MemoryAccessor;
