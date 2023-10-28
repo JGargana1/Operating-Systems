@@ -19,6 +19,7 @@ var TSOS;
         Yreg;
         Zflag;
         isExecuting;
+        segment = 0;
         constructor(PC = 0, Acc = 0, Xreg = 0, Yreg = 0, Zflag = 0, isExecuting = false) {
             this.PC = PC;
             this.Acc = Acc;
@@ -34,21 +35,11 @@ var TSOS;
             this.Yreg = 0;
             this.Zflag = 0;
             this.isExecuting = false;
+            this.segment = 0;
         }
         run() {
             this.isExecuting = true;
             this.cycle();
-        }
-        logStatus() {
-            console.log(`----- CPU Status -----`);
-            console.log(`Program Counter (PC): ${this.PC}`);
-            console.log(`Instruction Register (Opcode): ${_MemoryAccessor.read(this.PC)}`);
-            console.log(`Accumulator (Acc): ${this.Acc}`);
-            console.log(`X Register (Xreg): ${this.Xreg}`);
-            console.log(`Y Register (Yreg): ${this.Yreg}`);
-            console.log(`Z Flag (Zflag): ${this.Zflag}`);
-            console.log(`Is Executing: ${this.isExecuting}`);
-            console.log(`----------------------`);
         }
         cycle() {
             _Kernel.krnTrace('CPU cycle');
@@ -58,7 +49,7 @@ var TSOS;
                     this.isExecuting = false;
                     return;
                 }
-                let opCode = _MemoryAccessor.read(this.PC).toUpperCase();
+                let opCode = _MemoryAccessor.read(this.segment, this.PC).toUpperCase();
                 switch (opCode) {
                     case "A9":
                         this.loadAccWithConstant();
@@ -116,7 +107,7 @@ var TSOS;
         loadAccWithConstant() {
             try {
                 this.PC++; // Increment to get the constant.
-                this.Acc = parseInt(_MemoryAccessor.read(this.PC), 16);
+                this.Acc = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 this.PC++; // Increment to point to the next opcode.
             }
             catch (error) {
@@ -125,14 +116,14 @@ var TSOS;
         }
         loadAccFromMemory() {
             try {
-                let currentOpcode = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let currentOpcode = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 _Kernel.krnTrace(`Executing opcode ${currentOpcode.toString(16).toUpperCase().padStart(2, '0')} at address ${this.PC}`);
                 this.PC++; // Move to the first byte of the address.
-                let lowByte = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let lowByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 this.PC++; // Move to the next address byte.
-                let highByte = parseInt(_MemoryAccessor.read(this.PC), 16) << 8;
+                let highByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16) << 8;
                 let address = lowByte + highByte;
-                this.Acc = parseInt(_MemoryAccessor.read(address), 16);
+                this.Acc = parseInt(_MemoryAccessor.read(this.segment, address), 16);
                 this.PC++; // Move to the next opcode.
             }
             catch (error) {
@@ -141,14 +132,14 @@ var TSOS;
         }
         storeAccInMemory() {
             try {
-                let currentOpcode = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let currentOpcode = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 _Kernel.krnTrace(`Executing opcode ${currentOpcode.toString(16).toUpperCase().padStart(2, '0')} at address ${this.PC}`);
                 this.PC++; // Move to the first byte of the address.
-                let lowByte = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let lowByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 this.PC++; // Move to the next address byte.
-                let highByte = parseInt(_MemoryAccessor.read(this.PC), 16) << 8;
+                let highByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16) << 8;
                 let address = lowByte + highByte;
-                _MemoryAccessor.write(address, this.Acc.toString(16).toUpperCase());
+                _MemoryAccessor.write(this.segment, address, this.Acc.toString(16).toUpperCase());
                 this.PC++; // Move to the next opcode.
             }
             catch (error) {
@@ -158,14 +149,14 @@ var TSOS;
         // Add with carry. (We assume no overflow handling for simplicity.)
         addWithCarry() {
             try {
-                let currentOpcode = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let currentOpcode = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 _Kernel.krnTrace(`Executing opcode ${currentOpcode.toString(16).toUpperCase().padStart(2, '0')} at address ${this.PC}`);
                 this.PC++; // Move to the first byte of the address.
-                let lowByte = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let lowByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 this.PC++; // Move to the next address byte.
-                let highByte = parseInt(_MemoryAccessor.read(this.PC), 16) << 8;
+                let highByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16) << 8;
                 let address = lowByte + highByte;
-                this.Acc += parseInt(_MemoryAccessor.read(address), 16);
+                this.Acc += parseInt(_MemoryAccessor.read(this.segment, address), 16);
                 this.PC++; // Move to the next opcode.
             }
             catch (error) {
@@ -176,7 +167,7 @@ var TSOS;
         loadXWithConstant() {
             try {
                 this.PC++; // Increment to get the constant.
-                this.Xreg = parseInt(_MemoryAccessor.read(this.PC), 16);
+                this.Xreg = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 this.PC++; // Increment to point to the next opcode.
             }
             catch (error) {
@@ -186,14 +177,14 @@ var TSOS;
         // Load the X register from memory.
         loadXFromMemory() {
             try {
-                let currentOpcode = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let currentOpcode = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 _Kernel.krnTrace(`Executing opcode ${currentOpcode.toString(16).toUpperCase().padStart(2, '0')} at address ${this.PC}`);
                 this.PC++; // Move to the first byte of the address.
-                let lowByte = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let lowByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 this.PC++; // Move to the next address byte.
-                let highByte = parseInt(_MemoryAccessor.read(this.PC), 16) << 8;
+                let highByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16) << 8;
                 let address = lowByte + highByte;
-                this.Xreg = parseInt(_MemoryAccessor.read(address), 16);
+                this.Xreg = parseInt(_MemoryAccessor.read(this.segment, address), 16);
                 this.PC++; // Move to the next opcode.
             }
             catch (error) {
@@ -204,7 +195,7 @@ var TSOS;
         loadYWithConstant() {
             try {
                 this.PC++; // Increment to get the constant.
-                this.Yreg = parseInt(_MemoryAccessor.read(this.PC), 16);
+                this.Yreg = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 this.PC++; // Increment to point to the next opcode.
             }
             catch (error) {
@@ -214,14 +205,14 @@ var TSOS;
         // Load the Y register from memory.
         loadYFromMemory() {
             try {
-                let currentOpcode = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let currentOpcode = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 _Kernel.krnTrace(`Executing opcode ${currentOpcode.toString(16).toUpperCase().padStart(2, '0')} at address ${this.PC}`);
                 this.PC++; // Move to the first byte of the address.
-                let lowByte = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let lowByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 this.PC++; // Move to the next address byte.
-                let highByte = parseInt(_MemoryAccessor.read(this.PC), 16) << 8;
+                let highByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16) << 8;
                 let address = lowByte + highByte;
-                this.Yreg = parseInt(_MemoryAccessor.read(address), 16);
+                this.Yreg = parseInt(_MemoryAccessor.read(this.segment, address), 16);
                 this.PC++; // Move to the next opcode.
             }
             catch (error) {
@@ -236,14 +227,14 @@ var TSOS;
         // Compare a byte in memory to the X register.
         compareByteToX() {
             try {
-                let currentOpcode = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let currentOpcode = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 _Kernel.krnTrace(`Executing opcode ${currentOpcode.toString(16).toUpperCase().padStart(2, '0')} at address ${this.PC}`);
                 this.PC++; // Move to the first byte of the address.
-                let lowByte = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let lowByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 this.PC++; // Move to the next address byte.
-                let highByte = parseInt(_MemoryAccessor.read(this.PC), 16) << 8;
+                let highByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16) << 8;
                 let address = lowByte + highByte;
-                let value = parseInt(_MemoryAccessor.read(address), 16);
+                let value = parseInt(_MemoryAccessor.read(this.segment, address), 16);
                 this.Zflag = (value === this.Xreg) ? 1 : 0;
                 this.PC++; // Move to the next opcode.
             }
@@ -255,10 +246,12 @@ var TSOS;
         branchNBytesIfZFlagIs0() {
             this.PC++;
             if (this.Zflag === 0) {
-                let offset = parseInt(_MemoryAccessor.read(this.PC), 16);
-                let old = this.PC;
-                this.PC = (this.PC + 1 + offset) % _MemoryAccessor.getMemorySize();
-                console.log("Jumping from ", old, " to ", this.PC);
+                const offset = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
+                const segmentSize = _MemoryAccessor.getMemorySize() / _Memory.memorySegments.length;
+                this.PC = (this.PC + 1 + offset) % segmentSize;
+                if (this.PC < 0 || this.PC >= segmentSize) {
+                    this.PC = this.PC % segmentSize;
+                }
             }
             else {
                 this.PC++;
@@ -267,15 +260,15 @@ var TSOS;
         // Increment the value of a byte.
         incrementValueOfByte() {
             try {
-                let currentOpcode = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let currentOpcode = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 _Kernel.krnTrace(`Executing opcode ${currentOpcode.toString(16).toUpperCase().padStart(2, '0')} at address ${this.PC}`);
                 this.PC++; // Move to the first byte of the address.
-                let lowByte = parseInt(_MemoryAccessor.read(this.PC), 16);
+                let lowByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16);
                 this.PC++; // Move to the next address byte.
-                let highByte = parseInt(_MemoryAccessor.read(this.PC), 16) << 8;
+                let highByte = parseInt(_MemoryAccessor.read(this.segment, this.PC), 16) << 8;
                 let address = lowByte + highByte;
-                let value = parseInt(_MemoryAccessor.read(address), 16);
-                _MemoryAccessor.write(address, (value + 1).toString(16).toUpperCase());
+                let value = parseInt(_MemoryAccessor.read(this.segment, address), 16);
+                _MemoryAccessor.write(this.segment, address, (value + 1).toString(16).toUpperCase());
                 this.PC++; // Move to the next opcode.
             }
             catch (error) {
@@ -295,11 +288,11 @@ var TSOS;
             // If X register is 0x02, print the 00-terminated string stored at the address in Y register
             else if (this.Xreg === 0x02) {
                 let str = '';
-                let byte = _MemoryAccessor.read(this.Yreg);
+                let byte = _MemoryAccessor.read(this.segment, this.Yreg);
                 while (byte !== "00" && this.Yreg < _MemoryAccessor.getMemorySize()) {
                     str += String.fromCharCode(parseInt(byte, 16));
                     this.Yreg++;
-                    byte = _MemoryAccessor.read(this.Yreg);
+                    byte = _MemoryAccessor.read(this.segment, this.Yreg);
                 }
                 _Kernel.krnTrace('System Call Output: ' + str);
                 _StdOut.putText(str);
@@ -314,7 +307,7 @@ var TSOS;
         displayCPUStatus() {
             console.log("CPU Status:");
             console.log("Program Counter:", this.PC);
-            console.log("Instruction Register:", _MemoryAccessor.read(this.PC).toUpperCase());
+            console.log("Instruction Register:", _MemoryAccessor.read(this.segment, this.PC).toUpperCase());
             console.log("Accumulator:", this.Acc);
             console.log("X Register:", this.Xreg);
             console.log("Y Register:", this.Yreg);

@@ -27,9 +27,8 @@ const KEYBOARD_IRQ: number = 1;
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
 //
 
-let _MemorySegments: TSOS.Memory[];
-let _MemoryAccessors: TSOS.MemoryAccessor[];
-let _currentMemorySegment: number;
+
+
 
 let _TerminatedPrograms: number[] = [];
 
@@ -71,6 +70,8 @@ var _StdIn:  TSOS.Console = null;
 var _StdOut: TSOS.Console = null;
 
 // UI
+
+
 var _Console: TSOS.Console;
 var _OsShell: TSOS.Shell;
 
@@ -87,9 +88,10 @@ var Glados: any = null;  // This is the function Glados() in glados-ip*.js http:
 var _GLaDOS: any = null; // If the above is linked in, this is the instantiated instance of Glados.
 
 var onDocumentLoad = function() {
-   _MemorySegments = [new TSOS.Memory(), new TSOS.Memory(), new TSOS.Memory()];
-   _MemoryAccessors = _MemorySegments.map(segment => new TSOS.MemoryAccessor(segment));
-   _currentMemorySegment = 0;
+   _Memory = new TSOS.Memory();
+   _MemoryAccessor = new TSOS.MemoryAccessor(_Memory);
+
+
    TSOS.Control.hostInit();
 };
 

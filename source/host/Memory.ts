@@ -2,10 +2,17 @@ module TSOS {
     export class Memory {
         public memorySegments: string[][];
         public byteOccupiedFlags: boolean[][];
+        public segmentBases: number[];  
+        public segmentLimits: number[]; 
+        private pidToSegmentMap: { [pid: number]: number } = {}; 
 
-        constructor(private segments: number = 3, private segmentSize: number = 256) {
+        constructor(private segments: number = 3, public segmentSize: number = 256) {
             this.memorySegments = new Array(segments).fill([]).map(_ => new Array(segmentSize).fill("00"));
             this.byteOccupiedFlags = new Array(segments).fill([]).map(_ => new Array(segmentSize).fill(false));
+            
+            
+            this.segmentBases = [0, 256, 512];
+            this.segmentLimits = [255, 511, 767];
         }
 
         public init(): void {
@@ -15,6 +22,15 @@ module TSOS {
                     this.byteOccupiedFlags[segment][i] = false;
                 }
             }
+            this.pidToSegmentMap = {}; 
+        }
+
+        public assignSegmentToPID(pid: number, segment: number): void {
+            this.pidToSegmentMap[pid] = segment;
+        }
+
+        public getSegmentByPID(pid: number): number | undefined {
+            return this.pidToSegmentMap[pid];
         }
 
         public isByteOccupied(segment: number, address: number): boolean {
@@ -26,14 +42,8 @@ module TSOS {
         }
 
         public findFreeSegmentStartAddress(): number {
-            for(let segment = 0; segment < this.segments; segment++) {
-                if (!this.byteOccupiedFlags[segment].some(flag => flag)) {
-                    return 0;
-                }
-            }
-            return -1;
+            return 0;  
         }
-        
 
         public isMemoryOccupied(): boolean {
             return this.byteOccupiedFlags.flat().some(flag => flag); 
@@ -47,10 +57,9 @@ module TSOS {
             }
             return -1;
         }
-        
+
         public isSegmentOccupied(segment: number): boolean {
             return this.byteOccupiedFlags[segment].some(flag => flag);
         }
-        
     }
 }

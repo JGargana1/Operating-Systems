@@ -322,53 +322,39 @@ var TSOS;
         }
         shellLoad(args) {
             const input = document.getElementById('taProgramInput').value;
-            if (_MemoryAccessors.every(accessor => accessor.memory.isMemoryOccupied())) {
-                _StdOut.putText("Sorry, all memory segments are full.");
-                return;
-            }
             // Validate that the input is not empty and contains only valid hexadecimal characters.
             const isValid = /^[0-9A-Fa-f\s]+$/.test(input);
-            if (isValid) {
-                const opCodes = input.split(/\s+/);
-                if (opCodes.length <= 256) {
-                    let loaded = false;
-                    let segment = -1;
-                    for (let i = 0; i < _MemoryAccessors.length; i++) {
-                        if (!_MemoryAccessors[i].memory.isSegmentOccupied(i)) {
-                            segment = i;
-                            break;
-                        }
-                    }
-                    if (segment !== -1) {
-                        let startingAddress = 0; // Always 0 since we're loading at the start of a segment.
-                        let newProgram = new TSOS.Program(_PID, startingAddress, startingAddress + opCodes.length - 1);
-                        _Programs.push(newProgram);
-                        for (let i = 0; i < opCodes.length; i++) {
-                            _MemoryAccessors[segment].write(segment, startingAddress + i, opCodes[i]);
-                            console.log(`Loaded value ${opCodes[i]} to address ${startingAddress + i} in segment ${segment}`);
-                        }
-                        _StdOut.putText(`Program loaded with PID: ${_PID} in segment ${segment}`);
-                        document.getElementById('pid').textContent = _PID.toString();
-                        document.getElementById('state').textContent = "resident";
-                        _PID++;
-                        loaded = true;
-                    }
-                    if (!loaded) {
-                        _StdOut.putText("Sorry, there is not enough consecutive memory space for this program.");
-                    }
-                }
-                else {
-                    _StdOut.putText("The input exceeds the memory capacity.");
-                }
-            }
-            else {
+            if (!isValid) {
                 if (input === "") {
                     _StdOut.putText("The input is empty.");
                 }
                 else {
                     _StdOut.putText("The input is invalid. Only hex digits and spaces are allowed.");
                 }
+                return;
             }
+            const opCodes = input.split(/\s+/);
+            if (opCodes.length > _Memory.segmentSize) {
+                _StdOut.putText("The input exceeds the memory segment capacity.");
+                return;
+            }
+            const freeSegment = _MemoryAccessor.findFreeSegment();
+            if (freeSegment === -1) {
+                _StdOut.putText("Sorry, all memory segments are full.");
+                return;
+            }
+            let startingAddress = 0;
+            const newProgram = new TSOS.Program(_PID, startingAddress, startingAddress + opCodes.length - 1, freeSegment);
+            _Programs.push(newProgram);
+            for (let i = 0; i < opCodes.length; i++) {
+                _MemoryAccessor.write(freeSegment, startingAddress + i, opCodes[i]);
+                console.log(`Loaded value ${opCodes[i]} to address ${startingAddress + i} in segment ${freeSegment}`);
+            }
+            _Memory.assignSegmentToPID(_PID, freeSegment);
+            _StdOut.putText(`Program loaded with PID: ${_PID} in segment ${freeSegment}`);
+            document.getElementById('pid').textContent = _PID.toString();
+            document.getElementById('state').textContent = "resident";
+            _PID++;
         }
         shellRun(args) {
             if (args.length === 0) {
@@ -376,20 +362,19 @@ var TSOS;
                 return;
             }
             const pid = parseInt(args[0]);
-            // Locate the program by its PID
-            const programToRun = _Programs.find(program => program.PID === pid);
-            if (!programToRun) {
+            const segmentForProgram = _Memory.getSegmentByPID(pid);
+            if (segmentForProgram === undefined) {
                 _StdOut.putText(`No program with PID: ${pid} found.`);
                 return;
             }
-            // Check if the program is terminated
-            if (_TerminatedPrograms.includes(programToRun.PID)) {
+            if (_TerminatedPrograms.includes(pid)) {
                 _StdOut.putText(`Sorry, this program has been terminated.`);
                 return;
             }
-            // Set up the CPU to execute the program
-            _CPU.PC = programToRun.startAddress; // Set Program Counter to the starting address of the program
-            _CPU.isExecuting = true; // Set the CPU to execution mode
+            const startAddressForProgram = 0;
+            _CPU.PC = startAddressForProgram;
+            _CPU.segment = segmentForProgram;
+            _CPU.isExecuting = true;
             _StdOut.putText(`Running program with PID: ${pid}`);
         }
     }
