@@ -58,6 +58,7 @@ var Glados = null; // This is the function Glados() in glados-ip*.js http://alan
 var _GLaDOS = null; // If the above is linked in, this is the instantiated instance of Glados.
 var onDocumentLoad = function () {
     _Memory = new TSOS.Memory();
+    _MemoryManager = new TSOS.MemoryManager(_Memory);
     _MemoryAccessor = new TSOS.MemoryAccessor(_Memory);
     TSOS.Control.hostInit();
 };

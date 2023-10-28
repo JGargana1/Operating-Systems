@@ -338,7 +338,7 @@ var TSOS;
                 _StdOut.putText("The input exceeds the memory segment capacity.");
                 return;
             }
-            const freeSegment = _MemoryAccessor.findFreeSegment();
+            const freeSegment = _MemoryManager.findFreeSegment();
             if (freeSegment === -1) {
                 _StdOut.putText("Sorry, all memory segments are full.");
                 return;
@@ -348,9 +348,10 @@ var TSOS;
             _Programs.push(newProgram);
             for (let i = 0; i < opCodes.length; i++) {
                 _MemoryAccessor.write(freeSegment, startingAddress + i, opCodes[i]);
+                _MemoryManager.setByteOccupied(freeSegment, startingAddress + i, true);
                 console.log(`Loaded value ${opCodes[i]} to address ${startingAddress + i} in segment ${freeSegment}`);
             }
-            _Memory.assignSegmentToPID(_PID, freeSegment);
+            _MemoryManager.assignSegmentToPID(_PID, freeSegment);
             _StdOut.putText(`Program loaded with PID: ${_PID} in segment ${freeSegment}`);
             document.getElementById('pid').textContent = _PID.toString();
             document.getElementById('state').textContent = "resident";
@@ -362,7 +363,7 @@ var TSOS;
                 return;
             }
             const pid = parseInt(args[0]);
-            const segmentForProgram = _Memory.getSegmentByPID(pid);
+            const segmentForProgram = _MemoryManager.getSegmentByPID(pid);
             if (segmentForProgram === undefined) {
                 _StdOut.putText(`No program with PID: ${pid} found.`);
                 return;

@@ -63,7 +63,7 @@ var	_MemoryAccessor:	TSOS.MemoryAccessor;
 //	Software	(OS)
 let _Programs: TSOS.Program[] = [];
 
-var	_MemoryManager:	any	=	null;
+var	_MemoryManager:	TSOS.MemoryManager	=	null;
 
 // Standard input and output
 var _StdIn:  TSOS.Console = null; 
@@ -89,8 +89,9 @@ var _GLaDOS: any = null; // If the above is linked in, this is the instantiated 
 
 var onDocumentLoad = function() {
    _Memory = new TSOS.Memory();
+   _MemoryManager = new TSOS.MemoryManager(_Memory);
+   
    _MemoryAccessor = new TSOS.MemoryAccessor(_Memory);
-
 
    TSOS.Control.hostInit();
 };
