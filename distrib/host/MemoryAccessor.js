@@ -28,10 +28,6 @@ var TSOS;
         clearMemory() {
             this.memory.init();
         }
-        // This method seems to be related to some UI functionality, so I've left it unchanged.
-        updateMemoryDisplay(address, value) {
-            // ... (unchanged)
-        }
     }
     TSOS.MemoryAccessor = MemoryAccessor;
 })(TSOS || (TSOS = {}));

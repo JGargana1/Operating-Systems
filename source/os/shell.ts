@@ -93,6 +93,11 @@ module TSOS {
             this.commandList[this.commandList.length] = sc;
 
 
+            sc = new ShellCommand(this.shellClearMem,
+                                  "clearmem", "- Clears all memory segments.");
+            this.commandList[this.commandList.length] = sc;
+
+
 
 
         
@@ -427,7 +432,7 @@ module TSOS {
             const freeSegment: number = _MemoryManager.findFreeSegment();
         
             if (freeSegment === -1) {
-                _StdOut.putText("Sorry, all memory segments are full.");
+                _StdOut.putText("Sorry, all memory segments are full, please clear memory.");
                 return;
             }
         
@@ -451,6 +456,7 @@ module TSOS {
             document.getElementById('state')!.textContent = "resident";
             _PID++;
         }
+        
         
         
         
@@ -487,6 +493,16 @@ module TSOS {
             _CPU.isExecuting = true;             
         
             _StdOut.putText(`Running program with PID: ${pid}`);
+        }
+        
+
+
+        public shellClearMem(args: string[]): void {
+            _Memory.init();
+        
+            _MemoryManager = new TSOS.MemoryManager(_Memory); 
+        
+            _StdOut.putText("All memory segments have been cleared.");
         }
         
         

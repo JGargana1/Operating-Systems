@@ -50,6 +50,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Validates the user code in the HTML5 text area.");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellClearMem, "clearmem", "- Clears all memory segments.");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // date
@@ -340,7 +342,7 @@ var TSOS;
             }
             const freeSegment = _MemoryManager.findFreeSegment();
             if (freeSegment === -1) {
-                _StdOut.putText("Sorry, all memory segments are full.");
+                _StdOut.putText("Sorry, all memory segments are full, please clear memory.");
                 return;
             }
             let startingAddress = 0;
@@ -377,6 +379,11 @@ var TSOS;
             _CPU.segment = segmentForProgram;
             _CPU.isExecuting = true;
             _StdOut.putText(`Running program with PID: ${pid}`);
+        }
+        shellClearMem(args) {
+            _Memory.init();
+            _MemoryManager = new TSOS.MemoryManager(_Memory);
+            _StdOut.putText("All memory segments have been cleared.");
         }
     }
     TSOS.Shell = Shell;
