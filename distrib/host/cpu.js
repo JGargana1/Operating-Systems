@@ -19,14 +19,16 @@ var TSOS;
         Yreg;
         Zflag;
         isExecuting;
+        programs;
         segment = 0;
-        constructor(PC = 0, Acc = 0, Xreg = 0, Yreg = 0, Zflag = 0, isExecuting = false) {
+        constructor(PC = 0, Acc = 0, Xreg = 0, Yreg = 0, Zflag = 0, isExecuting = false, programs) {
             this.PC = PC;
             this.Acc = Acc;
             this.Xreg = Xreg;
             this.Yreg = Yreg;
             this.Zflag = Zflag;
             this.isExecuting = isExecuting;
+            this.programs = programs;
         }
         init() {
             this.PC = 0;
@@ -46,6 +48,12 @@ var TSOS;
             if (this.isExecuting) {
                 if (this.PC < 0 || this.PC >= _MemoryAccessor.getMemorySize()) {
                     _Kernel.krnTrace('Program counter out of memory bounds: ' + this.PC);
+                    const terminatedProgram = _Programs.find(program => program.segment === this.segment);
+                    if (terminatedProgram) {
+                        terminatedProgram.state = "Terminated";
+                        this.updatePCBDisplay(terminatedProgram);
+                        console.log('Program terminated:', terminatedProgram);
+                    }
                     this.isExecuting = false;
                     return;
                 }
@@ -99,6 +107,10 @@ var TSOS;
                         this.isExecuting = false;
                         _Kernel.krnTrace("Invalid OP code: " + opCode);
                         break;
+                }
+                const currentProgram = _Programs.find(program => program.segment === this.segment);
+                if (currentProgram) {
+                    this.updatePCBDisplay(currentProgram);
                 }
                 this.displayCPUStatus();
             }
@@ -221,8 +233,12 @@ var TSOS;
         }
         // Break operation.
         break() {
+            const terminatedProgram = _Programs.find(program => program.segment === this.segment);
+            if (terminatedProgram) {
+                terminatedProgram.state = "Terminated";
+                this.updatePCBDisplay(terminatedProgram);
+            }
             this.isExecuting = false;
-            // Don't increment the PC here.
         }
         // Compare a byte in memory to the X register.
         compareByteToX() {
@@ -312,23 +328,19 @@ var TSOS;
             console.log("X Register:", this.Xreg);
             console.log("Y Register:", this.Yreg);
             console.log("Z Flag:", this.Zflag);
-            this.updatePCBDisplay();
             this.updateCpuDisplay();
         }
-        updatePCBDisplay() {
-            const currentState = this.isExecuting ? 'Running' : 'Terminated';
-            document.getElementById('state').textContent = currentState;
-            document.getElementById('counter').textContent = this.PC.toString();
-            document.getElementById('acc').textContent = this.Acc.toString();
-            document.getElementById('x').textContent = this.Xreg.toString();
-            document.getElementById('y').textContent = this.Yreg.toString();
-            document.getElementById('z').textContent = this.Zflag.toString();
-            if (currentState === 'Terminated') {
-                const program = _Programs.find(p => this.PC >= p.startAddress && this.PC <= p.endAddress);
-                if (program && !_TerminatedPrograms.includes(program.PID)) {
-                    _TerminatedPrograms.push(program.PID);
-                }
+        updatePCBDisplay(program) {
+            const pcbElement = document.getElementById(`pcb-${program.PID}`);
+            if (!pcbElement) {
+                return;
             }
+            pcbElement.querySelector('.pc-value').textContent = `${_CPU.PC}`;
+            pcbElement.querySelector('.acc-value').textContent = `${_CPU.Acc}`;
+            pcbElement.querySelector('.xreg-value').textContent = `${_CPU.Xreg}`;
+            pcbElement.querySelector('.yreg-value').textContent = `${_CPU.Yreg}`;
+            pcbElement.querySelector('.zflag-value').textContent = `${_CPU.Zflag}`;
+            pcbElement.querySelector('.state-value').textContent = `${program.state}`;
         }
         updateCpuDisplay() {
             document.getElementById('cpu_counter').textContent = this.PC.toString();
@@ -336,6 +348,15 @@ var TSOS;
             document.getElementById('cpu_x').textContent = this.Xreg.toString();
             document.getElementById('cpu_y').textContent = this.Yreg.toString();
             document.getElementById('cpu_z').textContent = this.Zflag.toString();
+        }
+        clearPCBDisplay() {
+            const pcbContainer = document.getElementById("pcb-container");
+            if (pcbContainer) {
+                pcbContainer.innerHTML = '';
+            }
+        }
+        clearPCBsFromMemory() {
+            _Programs = [];
         }
     }
     TSOS.Cpu = Cpu;

@@ -34,5 +34,11 @@ module TSOS {
         public isSegmentOccupied(segment: number): boolean {
             return this.memory.byteOccupiedFlags[segment].some(flag => flag);
         }
+
+        public clearAll(): void {
+            this.pidToSegmentMap = {};
+            this.memory.init();
+        }
+        
     }
 }

@@ -407,7 +407,10 @@ module TSOS {
             _Kernel.krnTrapError("Test trap command executed");
         }
         
-        public shellLoad(args: string[]): void {
+
+
+
+        public shellLoad = (args: string[]): void => {
             const input: string = (document.getElementById('taProgramInput') as HTMLInputElement).value;
         
             // Validate that the input is not empty and contains only valid hexadecimal characters.
@@ -438,24 +441,52 @@ module TSOS {
         
             let startingAddress = 0;
             const newProgram = new Program(_PID, startingAddress, startingAddress + opCodes.length - 1, freeSegment);
+
         
             _Programs.push(newProgram);
         
             for (let i = 0; i < opCodes.length; i++) {
                 _MemoryAccessor.write(freeSegment, startingAddress + i, opCodes[i]);
-                
+        
                 _MemoryManager.setByteOccupied(freeSegment, startingAddress + i, true); 
-            
+        
                 console.log(`Loaded value ${opCodes[i]} to address ${startingAddress + i} in segment ${freeSegment}`);
             }
         
             _MemoryManager.assignSegmentToPID(_PID, freeSegment);
         
             _StdOut.putText(`Program loaded with PID: ${_PID} in segment ${freeSegment}`);
-            document.getElementById('pid')!.textContent = _PID.toString();
-            document.getElementById('state')!.textContent = "resident";
+        
+            this.createPCBDisplay(newProgram); 
+        
             _PID++;
         }
+        
+
+        private createPCBDisplay(program: TSOS.Program): void {
+            const pcbContainer = document.getElementById("pcb-container");
+            
+            if (!pcbContainer) {
+                return;
+            }
+        
+            let pcbHtml = `
+                <div class="pcb" id="pcb-${program.PID}">
+                    <span class="pid-display">PID: <span class="pid-value">${program.PID}</span></span>
+                    <span class="state-display">State: <span class="state-value">${program.state}</span></span>
+                    <span class="pc-display">PC: <span class="pc-value">${program.PC}</span></span>
+                    <span class="acc-display">ACC: <span class="acc-value">${program.ACC}</span></span>
+                    <span class="xreg-display">Xreg: <span class="xreg-value">${program.Xreg}</span></span>
+                    <span class="yreg-display">Yreg: <span class="yreg-value">${program.Yreg}</span></span>
+                    <span class="zflag-display">Zflag: <span class="zflag-value">${program.Zflag}</span></span>
+                </div>`;
+            
+            pcbContainer.innerHTML += pcbHtml;
+        }
+        
+        
+        
+        
         
         
         
@@ -473,36 +504,58 @@ module TSOS {
         
             const pid = parseInt(args[0]);
         
-            const segmentForProgram = _MemoryManager.getSegmentByPID(pid);
+            const programToRun = _Programs.find(program => program.PID === pid);
         
-            if (segmentForProgram === undefined) {
+            if (!programToRun) {
                 _StdOut.putText(`No program with PID: ${pid} found.`);
                 return;
             }
         
-            if (_TerminatedPrograms.includes(pid)) {
-                _StdOut.putText(`Sorry, this program has been terminated.`);
+            if (programToRun.state === "Terminated") {
+                _StdOut.putText(`Sorry, this program has been terminated`);
                 return;
             }
         
-            
-            const startAddressForProgram = 0;  
+            const segmentForProgram = _MemoryManager.getSegmentByPID(pid);
+        
+            if (segmentForProgram === undefined) {
+                _StdOut.putText(`Error: Memory segment for program with PID: ${pid} not found.`);
+                return;
+            }
+        
+            const startAddressForProgram = 0;
         
             _CPU.PC = startAddressForProgram; 
-            _CPU.segment = segmentForProgram; 
-            _CPU.isExecuting = true;             
+            _CPU.segment = programToRun.segment;  
+            _CPU.isExecuting = true;           
+        
+            programToRun.state = "Running";
         
             _StdOut.putText(`Running program with PID: ${pid}`);
         }
         
+        
 
 
         public shellClearMem(args: string[]): void {
-            _Memory.init();
-        
-            _MemoryManager = new TSOS.MemoryManager(_Memory); 
-        
+            _MemoryManager.clearAll(); 
             _StdOut.putText("All memory segments have been cleared.");
+        
+            for (let program of _Programs) {
+                console.log(`Setting program with PID ${program.PID} to Terminated from ${program.state}`);
+                program.state = "Terminated";
+                _CPU.updatePCBDisplay(program); 
+                console.log(`Program with PID ${program.PID} is now ${program.state}`);
+            }
+        
+            
+            const pcbContainer = document.getElementById("pcb-container");
+            if (pcbContainer) {
+                pcbContainer.innerHTML = ''; 
+            }
+        
+            
+            _Programs = [];
         }
         
         
