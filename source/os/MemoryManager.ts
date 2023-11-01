@@ -1,6 +1,6 @@
 module TSOS {
     export class MemoryManager {
-        private pidToSegmentMap: { [pid: number]: number } = {}; 
+        public pidToSegmentMap: { [pid: number]: number } = {}; 
         public segmentBases: number[] = [0, 256, 512];
         public segmentLimits: number[] = [255, 511, 767];
         
@@ -35,10 +35,11 @@ module TSOS {
             return this.memory.byteOccupiedFlags[segment].some(flag => flag);
         }
 
-        public clearAll(): void {
-            this.pidToSegmentMap = {};
-            this.memory.init();
-        }
+        
+
+        
+        
+        
         
     }
 }

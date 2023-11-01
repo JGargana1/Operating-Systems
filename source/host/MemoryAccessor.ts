@@ -14,6 +14,8 @@ module TSOS {
         }
 
         public write(segment: number, address: number, value: string): void {
+
+
             if (address < 0 || address >= this.memory.segmentSize) {
                 console.log(`Writing value ${value} to memory segment ${segment} and address ${address.toString(16).toUpperCase().padStart(4, '0')}`);
                 _Kernel.krnTrace(`Invalid memory write at segment ${segment} and address ${address}`);
@@ -22,14 +24,38 @@ module TSOS {
         
             _Kernel.krnTrace(`Writing to memory at segment ${segment} and address ${address} with value ${value}`);
             this.memory.memorySegments[segment][address] = value;
+
+            this.updateMemoryDisplay();
+
+            
+
+
         }
 
         public getMemorySize(): number {
             return this.memory.memorySegments.length * this.memory.segmentSize; 
         }
 
-        public clearMemory(): void {
-            this.memory.init();
+        private updateMemoryDisplay(): void {
+            const memoryDisplay = document.getElementById('memoryDisplay');
+            if (!memoryDisplay) return;
+        
+            memoryDisplay.innerHTML = '';
+            
+            for(let segment = 0; segment < this.memory.memorySegments.length; segment++) {
+                const segmentDiv = document.createElement("div");
+                segmentDiv.classList.add("memorySegment");
+                segmentDiv.innerHTML = `<h4>Segment ${segment}</h4>`;
+                
+                for(let i = 0; i < this.memory.segmentSize; i++) {
+                    const byteDiv = document.createElement("div");
+                    byteDiv.classList.add("memoryByte");
+                    byteDiv.innerText = this.memory.memorySegments[segment][i];
+                    segmentDiv.appendChild(byteDiv);
+                }
+                
+                memoryDisplay.appendChild(segmentDiv);
+            }
         }
 
        

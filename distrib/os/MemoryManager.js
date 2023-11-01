@@ -31,10 +31,6 @@ var TSOS;
         isSegmentOccupied(segment) {
             return this.memory.byteOccupiedFlags[segment].some(flag => flag);
         }
-        clearAll() {
-            this.pidToSegmentMap = {};
-            this.memory.init();
-        }
     }
     TSOS.MemoryManager = MemoryManager;
 })(TSOS || (TSOS = {}));

@@ -21,12 +21,28 @@ var TSOS;
             }
             _Kernel.krnTrace(`Writing to memory at segment ${segment} and address ${address} with value ${value}`);
             this.memory.memorySegments[segment][address] = value;
+            this.updateMemoryDisplay();
         }
         getMemorySize() {
             return this.memory.memorySegments.length * this.memory.segmentSize;
         }
-        clearMemory() {
-            this.memory.init();
+        updateMemoryDisplay() {
+            const memoryDisplay = document.getElementById('memoryDisplay');
+            if (!memoryDisplay)
+                return;
+            memoryDisplay.innerHTML = '';
+            for (let segment = 0; segment < this.memory.memorySegments.length; segment++) {
+                const segmentDiv = document.createElement("div");
+                segmentDiv.classList.add("memorySegment");
+                segmentDiv.innerHTML = `<h4>Segment ${segment}</h4>`;
+                for (let i = 0; i < this.memory.segmentSize; i++) {
+                    const byteDiv = document.createElement("div");
+                    byteDiv.classList.add("memoryByte");
+                    byteDiv.innerText = this.memory.memorySegments[segment][i];
+                    segmentDiv.appendChild(byteDiv);
+                }
+                memoryDisplay.appendChild(segmentDiv);
+            }
         }
     }
     TSOS.MemoryAccessor = MemoryAccessor;

@@ -21,6 +21,7 @@
    <!-- Virtual OS Routines: Make sure Kernel code is last, since it needs those above it. -->
    
    <script type="text/javascript" src="distrib/os/Program.js"></script>
+   <script type="text/javascript" src="distrib/os/MemoryDisplay.js"></script>
    <script type="text/javascript" src="distrib/os/MemoryManager.js"></script>
    <script type="text/javascript" src="distrib/os/interrupt.js"></script>
    <script type="text/javascript" src="distrib/os/canvastext.js"></script>
@@ -79,6 +80,10 @@
               tabindex="3">
       </canvas>
    </div>
+  
+</div>
+<h1>Process Control Block</h1>
+<div id="pcb-container"></div>
    <div class="cpu">
     <h3>CPU Display</h3>
     
@@ -121,8 +126,11 @@
          ></textarea>
       </label>
    </div>
+   
 
-   <div id="divUserProgramInput" style="margin-left:520px;">
+   
+
+   <div id="divUserProgramInput" style="margin-left:950px;">
       <label>
          User Program Input
          <br>
@@ -135,18 +143,18 @@
    </div>
 </div>
 
-<div id="pcb-container"></div>
+
+<div id="memoryDisplay"></div>
+
+
 
 
 
 <div id="task-bar">
    <div id="date-time"></div>
    <div id="status-display">Status: standby</div>
-
 </div>
 
-<div id="divMemoryDisplay" style="margin-left:520px;">
-</div>
 
 
 

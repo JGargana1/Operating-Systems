@@ -93,9 +93,7 @@ module TSOS {
             this.commandList[this.commandList.length] = sc;
 
 
-            sc = new ShellCommand(this.shellClearMem,
-                                  "clearmem", "- Clears all memory segments.");
-            this.commandList[this.commandList.length] = sc;
+        
 
 
 
@@ -127,6 +125,11 @@ module TSOS {
 
             sc = new ShellCommand(this.shellRun, "run", "- run 'PID'");
             this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellClearMem, "clearmem", "- clears memory'");
+            this.commandList[this.commandList.length] = sc;
+
+            
 
 
 
@@ -412,7 +415,9 @@ module TSOS {
 
         public shellLoad = (args: string[]): void => {
             const input: string = (document.getElementById('taProgramInput') as HTMLInputElement).value;
-        
+
+
+            
             // Validate that the input is not empty and contains only valid hexadecimal characters.
             const isValid: boolean = /^[0-9A-Fa-f\s]+$/.test(input);
         
@@ -486,15 +491,7 @@ module TSOS {
         
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
 
         public shellRun(args: string[]): void {
             if (args.length === 0) {
@@ -533,47 +530,32 @@ module TSOS {
         
             _StdOut.putText(`Running program with PID: ${pid}`);
         }
-        
-        
 
-
-        public shellClearMem(args: string[]): void {
-            _MemoryManager.clearAll(); 
-            _StdOut.putText("All memory segments have been cleared.");
+        public shellClearMem = (): void => {
+            _Memory.init();
         
-            for (let program of _Programs) {
-                console.log(`Setting program with PID ${program.PID} to Terminated from ${program.state}`);
-                program.state = "Terminated";
-                _CPU.updatePCBDisplay(program); 
-                console.log(`Program with PID ${program.PID} is now ${program.state}`);
+            _MemoryManager.pidToSegmentMap = {};
+        
+            
+            const memoryDisplayContainer = document.getElementById("memoryDisplay");
+            if (memoryDisplayContainer) {
+                memoryDisplayContainer.innerHTML = ''; 
+                
             }
         
             
+            _StdOut.putText("Memory has been cleared.");
+
             const pcbContainer = document.getElementById("pcb-container");
             if (pcbContainer) {
                 pcbContainer.innerHTML = ''; 
             }
-        
-            
+
             _Programs = [];
         }
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
 
-       
-        
-    
-        
-        
 
 
     }
