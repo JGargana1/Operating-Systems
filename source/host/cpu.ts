@@ -38,7 +38,7 @@
                 this.isExecuting = false;
                 this.segment = 0;  
             }
-            
+                        
             public run(): void {
                 this.isExecuting = true;
                 this.cycle();
@@ -61,6 +61,7 @@
 
                 
                         this.isExecuting = false;
+                        _Scheduler.onProgramTermination(); 
                         return;
                     }
                     
@@ -100,7 +101,8 @@
                     this.PC++;
                     break;
                 case "00":
-                    this.break();
+                    this.terminateProgram(); 
+                    _Scheduler.onProgramTermination(); 
                     break;
                 case "EC":
                     this.compareByteToX();
@@ -118,6 +120,8 @@
                     // Handle invalid opcode.
                     this.isExecuting = false;
                     _Kernel.krnTrace("Invalid OP code: " + opCode);
+                    this.terminateProgram(); 
+                    _Scheduler.onProgramTermination(); 
                     break;
 
                     
@@ -133,6 +137,15 @@
 
             // TODO: Update the CPU, PCB, and memory displays.
         }
+        private terminateProgram(): void {
+            const terminatedProgram = _Programs.find(program => program.segment === this.segment);
+            if (terminatedProgram) {
+                terminatedProgram.state = "Terminated";
+                this.updatePCBDisplay(terminatedProgram);
+            }
+            this.isExecuting = false; 
+        }
+        
         private loadAccWithConstant(): void {
             try {
                 this.PC++;  // Increment to get the constant.

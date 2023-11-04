@@ -56,10 +56,12 @@ var _hardwareClockID = null;
 // For testing (and enrichment)...
 var Glados = null; // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
 var _GLaDOS = null; // If the above is linked in, this is the instantiated instance of Glados.
+var _Scheduler;
 var onDocumentLoad = function () {
     _Memory = new TSOS.Memory();
     _MemoryManager = new TSOS.MemoryManager(_Memory);
     _MemoryAccessor = new TSOS.MemoryAccessor(_Memory);
+    _Scheduler = new TSOS.Scheduler();
     TSOS.Control.hostInit();
 };
 //# sourceMappingURL=globals.js.map

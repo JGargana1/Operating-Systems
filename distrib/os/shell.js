@@ -67,6 +67,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellClearMem, "clearmem", "- clears memory'");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRunAll, "runall", "- runs all programs in memory'");
+            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -381,6 +383,10 @@ var TSOS;
                 return;
             }
             const pid = parseInt(args[0]);
+            if (isNaN(pid)) {
+                _StdOut.putText("Invalid PID. Please enter a numeric PID.");
+                return;
+            }
             const programToRun = _Programs.find(program => program.PID === pid);
             if (!programToRun) {
                 _StdOut.putText(`No program with PID: ${pid} found.`);
@@ -390,21 +396,30 @@ var TSOS;
                 _StdOut.putText(`Sorry, this program has been terminated`);
                 return;
             }
-            const segmentForProgram = _MemoryManager.getSegmentByPID(pid);
-            if (segmentForProgram === undefined) {
-                _StdOut.putText(`Error: Memory segment for program with PID: ${pid} not found.`);
+            // If the CPU is already executing, we shouldn't start another program.
+            if (_CPU.isExecuting) {
+                _StdOut.putText(`CPU is already running a program.`);
                 return;
             }
-            const startAddressForProgram = 0;
-            _CPU.PC = startAddressForProgram;
-            _CPU.segment = programToRun.segment;
-            _CPU.isExecuting = true;
+            // Set up the CPU registers with the state of the program to run.
+            _Scheduler.prepareProgram(programToRun);
+            // Set Scheduler to single-run mode.
+            _Scheduler.isSingleRunMode = true;
+            _Scheduler.singleRunProgramPID = programToRun.PID;
+            _Scheduler.currentProgramIndex = _Programs.indexOf(programToRun); // Get the index of the program
+            // Update the program state to "Running".
             programToRun.state = "Running";
+            // Call the CPU run method to start executing the program.
+            _CPU.run(); // Make sure this method runs the CPU cycle for the current program only.
             _StdOut.putText(`Running program with PID: ${pid}`);
         }
         shellClearMem = () => {
             _Memory.init();
             _MemoryManager.pidToSegmentMap = {};
+            _CPU.init();
+            _Scheduler.init();
+            _Programs.forEach(program => program.init());
+            _Programs = [];
             const memoryDisplayContainer = document.getElementById("memoryDisplay");
             if (memoryDisplayContainer) {
                 memoryDisplayContainer.innerHTML = '';
@@ -416,6 +431,12 @@ var TSOS;
             }
             _Programs = [];
         };
+        shellRunAll() {
+            _CPU.isExecuting = true;
+            _Scheduler.currentProgramIndex = 0;
+            _Scheduler.cyclesExecuted = 0;
+            _Scheduler.cycleRoundRobin();
+        }
     }
     TSOS.Shell = Shell;
 })(TSOS || (TSOS = {}));

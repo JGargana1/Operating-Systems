@@ -1,5 +1,15 @@
 module TSOS {
     export class Program {
+        public init(): void {
+            this.state = "Terminated";  
+            this.PC = 0;
+            this.ACC = 0;
+            this.Xreg = 0;
+            this.Yreg = 0;
+            this.Zflag = 0;
+            
+        }
+        
         public PID: number;
         public startAddress: number;
         public endAddress: number;

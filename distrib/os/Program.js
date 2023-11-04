@@ -1,6 +1,14 @@
 var TSOS;
 (function (TSOS) {
     class Program {
+        init() {
+            this.state = "Terminated";
+            this.PC = 0;
+            this.ACC = 0;
+            this.Xreg = 0;
+            this.Yreg = 0;
+            this.Zflag = 0;
+        }
         PID;
         startAddress;
         endAddress;

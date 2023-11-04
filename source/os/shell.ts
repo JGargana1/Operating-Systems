@@ -129,6 +129,9 @@ module TSOS {
             sc = new ShellCommand(this.shellClearMem, "clearmem", "- clears memory'");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellRunAll, "runall", "- runs all programs in memory'");
+            this.commandList[this.commandList.length] = sc;
+
             
 
 
@@ -498,44 +501,57 @@ module TSOS {
                 _StdOut.putText("Please specify a PID to run.");
                 return;
             }
-        
+            
             const pid = parseInt(args[0]);
-        
+            if (isNaN(pid)) {
+                _StdOut.putText("Invalid PID. Please enter a numeric PID.");
+                return;
+            }
+            
             const programToRun = _Programs.find(program => program.PID === pid);
-        
+            
             if (!programToRun) {
                 _StdOut.putText(`No program with PID: ${pid} found.`);
                 return;
             }
-        
+            
             if (programToRun.state === "Terminated") {
                 _StdOut.putText(`Sorry, this program has been terminated`);
                 return;
             }
-        
-            const segmentForProgram = _MemoryManager.getSegmentByPID(pid);
-        
-            if (segmentForProgram === undefined) {
-                _StdOut.putText(`Error: Memory segment for program with PID: ${pid} not found.`);
+            
+            if (_CPU.isExecuting) {
+                _StdOut.putText(`CPU is already running a program.`);
                 return;
             }
-        
-            const startAddressForProgram = 0;
-        
-            _CPU.PC = startAddressForProgram; 
-            _CPU.segment = programToRun.segment;  
-            _CPU.isExecuting = true;           
-        
+            
+            _Scheduler.prepareProgram(programToRun);
+            
+            // Set Scheduler to single-run mode.
+            _Scheduler.isSingleRunMode = true;
+            _Scheduler.singleRunProgramPID = programToRun.PID;
+            _Scheduler.currentProgramIndex = _Programs.indexOf(programToRun); 
+            
             programToRun.state = "Running";
-        
+            
+            _CPU.run(); 
+            
             _StdOut.putText(`Running program with PID: ${pid}`);
         }
+        
 
         public shellClearMem = (): void => {
             _Memory.init();
-        
+
             _MemoryManager.pidToSegmentMap = {};
         
+            _CPU.init(); 
+
+            _Scheduler.init(); 
+
+            _Programs.forEach(program => program.init()); 
+
+            _Programs = []; 
             
             const memoryDisplayContainer = document.getElementById("memoryDisplay");
             if (memoryDisplayContainer) {
@@ -552,6 +568,13 @@ module TSOS {
             }
 
             _Programs = [];
+        }
+
+        public shellRunAll(): void {
+            _CPU.isExecuting = true;
+            _Scheduler.currentProgramIndex = 0;
+            _Scheduler.cyclesExecuted = 0;
+            _Scheduler.cycleRoundRobin();
         }
         
         

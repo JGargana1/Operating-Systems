@@ -55,6 +55,7 @@ var TSOS;
                         console.log('Program terminated:', terminatedProgram);
                     }
                     this.isExecuting = false;
+                    _Scheduler.onProgramTermination();
                     return;
                 }
                 let opCode = _MemoryAccessor.read(this.segment, this.PC).toUpperCase();
@@ -88,7 +89,8 @@ var TSOS;
                         this.PC++;
                         break;
                     case "00":
-                        this.break();
+                        this.terminateProgram();
+                        _Scheduler.onProgramTermination();
                         break;
                     case "EC":
                         this.compareByteToX();
@@ -106,6 +108,8 @@ var TSOS;
                         // Handle invalid opcode.
                         this.isExecuting = false;
                         _Kernel.krnTrace("Invalid OP code: " + opCode);
+                        this.terminateProgram();
+                        _Scheduler.onProgramTermination();
                         break;
                 }
                 const currentProgram = _Programs.find(program => program.segment === this.segment);
@@ -115,6 +119,14 @@ var TSOS;
                 this.displayCPUStatus();
             }
             // TODO: Update the CPU, PCB, and memory displays.
+        }
+        terminateProgram() {
+            const terminatedProgram = _Programs.find(program => program.segment === this.segment);
+            if (terminatedProgram) {
+                terminatedProgram.state = "Terminated";
+                this.updatePCBDisplay(terminatedProgram);
+            }
+            this.isExecuting = false;
         }
         loadAccWithConstant() {
             try {
