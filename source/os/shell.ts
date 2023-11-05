@@ -135,6 +135,8 @@ module TSOS {
             sc = new ShellCommand(this.shellKill, "kill", "- kill 'PID''");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellKillAll, "killall", "- kills all programs");
+            this.commandList[this.commandList.length] = sc;
             
 
 
@@ -607,6 +609,23 @@ module TSOS {
                 _StdOut.putText("Usage: kill <PID>  Please supply a PID.");
             }
         }
+
+        public shellKillAll(args: string[]) {
+            if (_Programs.length > 0) {
+                for (let i = 0; i < _Programs.length; i++) {
+                    if (_Programs[i].state !== "Terminated") {
+                        _Programs[i].state = "Terminated";
+                        _CPU.updatePCBDisplay(_Programs[i]);
+
+                    }
+                }
+                
+                _StdOut.putText("All loaded programs have been terminated.");
+            } else {
+                _StdOut.putText("No loaded programs found.");
+            }
+        }
+        
         
 
 

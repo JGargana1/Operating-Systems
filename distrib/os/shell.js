@@ -71,6 +71,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellKill, "kill", "- kill 'PID''");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellKillAll, "killall", "- kills all programs");
+            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -455,6 +457,20 @@ var TSOS;
             }
             else {
                 _StdOut.putText("Usage: kill <PID>  Please supply a PID.");
+            }
+        }
+        shellKillAll(args) {
+            if (_Programs.length > 0) {
+                for (let i = 0; i < _Programs.length; i++) {
+                    if (_Programs[i].state !== "Terminated") {
+                        _Programs[i].state = "Terminated";
+                        _CPU.updatePCBDisplay(_Programs[i]);
+                    }
+                }
+                _StdOut.putText("All loaded programs have been terminated.");
+            }
+            else {
+                _StdOut.putText("No loaded programs found.");
             }
         }
     }
