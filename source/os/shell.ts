@@ -138,6 +138,8 @@ module TSOS {
             sc = new ShellCommand(this.shellKillAll, "killall", "- kills all programs");
             this.commandList[this.commandList.length] = sc;
             
+            sc = new ShellCommand(this.shellQuantum, "quantum", "- quantum 'int' sets the quantum");
+            this.commandList[this.commandList.length] = sc;
 
 
 
@@ -584,7 +586,7 @@ module TSOS {
                 const pid = parseInt(args[0]);
                 
                 if (isNaN(pid)) {
-                    _StdOut.putText(`Please provide a valid PID.`);
+                    _StdOut.putText('Please provide a valid PID.');
                     return;
                 }
 
@@ -597,13 +599,13 @@ module TSOS {
                         _Programs[i].state = "Terminated";
                         _CPU.updatePCBDisplay(terminatedProgram);
 
-                        _StdOut.putText(`Program with PID ${pid} has been terminated.`);
+                        _StdOut.putText('Program with PID ${pid} has been terminated.');
                         break;
                     }
                 }
 
                 if (!programExists) {
-                    _StdOut.putText(`No program with PID ${pid} found.`);
+                    _StdOut.putText('No program with PID ${pid} found.');
                 }
             } else {
                 _StdOut.putText("Usage: kill <PID>  Please supply a PID.");
@@ -623,6 +625,22 @@ module TSOS {
                 _StdOut.putText("All loaded programs have been terminated.");
             } else {
                 _StdOut.putText("No loaded programs found.");
+            }
+        }
+
+        public shellQuantum(args: string[]): void {
+            if (args.length === 0) {
+                _StdOut.putText('Current quantum is set to ${_Scheduler.quantum}.');
+            } else if (args.length === 1) {
+                const newQuantum = parseInt(args[0]);
+                if (!isNaN(newQuantum)) {
+                    _Scheduler.quantum = newQuantum;
+                    _StdOut.putText('Quantum updated to ${newQuantum}.');
+                } else {
+                    _StdOut.putText("Invalid quantum value. Please provide a valid integer.");
+                }
+            } else {
+                _StdOut.putText("Usage: quantum 'int' - Display or set the quantum value.");
             }
         }
         
