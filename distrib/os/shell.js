@@ -429,7 +429,7 @@ var TSOS;
             _CPU.isExecuting = true;
             _Scheduler.currentProgramIndex = 0;
             _Scheduler.cyclesExecuted = 0;
-            _Scheduler.cycleRoundRobin();
+            _Scheduler.executeNonTerminatedPrograms();
         }
         shellKill(args) {
             if (args.length > 0) {

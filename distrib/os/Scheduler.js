@@ -13,7 +13,7 @@ var TSOS;
         cycleRoundRobin() {
             if (this.isSingleRunMode) {
                 // Only run the current program if we're in single-run mode
-                let currentProgram = _Programs[this.currentProgramIndex];
+                const currentProgram = _Programs[this.currentProgramIndex];
                 if (currentProgram && currentProgram.PID === this.singleRunProgramPID) {
                     if (currentProgram.state !== "Terminated") {
                         _CPU.cycle(); // Execute the CPU cycle for the current program
@@ -28,21 +28,36 @@ var TSOS;
             }
             else {
                 if (_CPU.isExecuting) {
-                    _CPU.cycle();
-                    this.cyclesExecuted++;
+                    const currentProgram = _Programs[this.currentProgramIndex];
+                    if (currentProgram && currentProgram.state !== "Terminated") {
+                        _CPU.cycle();
+                        this.cyclesExecuted++;
+                    }
                     if (this.cyclesExecuted >= this.quantum) {
                         this.contextSwitch();
                     }
                 }
                 else {
-                    let nextProgramIndex = this.findNextProgram();
-                    if (nextProgramIndex !== -1) {
-                        this.currentProgramIndex = nextProgramIndex;
-                        this.prepareProgram(_Programs[nextProgramIndex]);
-                        _CPU.isExecuting = true;
-                        this.cyclesExecuted = 0;
-                    }
+                    this.executeNonTerminatedPrograms();
                 }
+            }
+        }
+        executeNonTerminatedPrograms() {
+            if (this.currentProgramIndex < _Programs.length) {
+                const currentProgram = _Programs[this.currentProgramIndex];
+                if (currentProgram.state !== "Terminated") {
+                    this.prepareProgram(currentProgram);
+                    _CPU.isExecuting = true;
+                    this.cyclesExecuted = 0;
+                }
+                else {
+                    this.currentProgramIndex++;
+                    this.executeNonTerminatedPrograms();
+                }
+            }
+            else {
+                _Kernel.krnTrace("All programs have terminated.");
+                _CPU.isExecuting = false;
             }
         }
         findNextProgram() {
