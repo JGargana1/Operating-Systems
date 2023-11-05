@@ -8,20 +8,7 @@
   margin-left: 520px;
 }
 
-#memoryDisplay {
-  display: flex; 
-  gap: 1rem;   
-  align-items: start; 
-}
 
-.memorySegment {
-  
-  overflow-y: auto;
-  max-height: 300px;
-  border: 1px solid #ddd;
-  padding: 1rem;
-  width: 200px; 
-}
 
 
 

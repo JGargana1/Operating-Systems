@@ -19,6 +19,28 @@ var TSOS;
                 }
             }
         }
+        generateMemoryDisplay() {
+            for (let segment = 0; segment < 3; segment++) {
+                const segmentContent = document.getElementById(`segment-${segment}`);
+                for (let byte = 0; byte < 256; byte++) {
+                    const span = document.createElement('span');
+                    span.id = `byte-${segment}-${byte}`;
+                    span.textContent = '00';
+                    segmentContent.appendChild(span);
+                }
+            }
+        }
+        static resetMemoryDisplay() {
+            for (let segment = 0; segment < 3; segment++) {
+                for (let byte = 0; byte < 256; byte++) {
+                    const spanId = `byte-${segment}-${byte}`;
+                    const spanElement = document.getElementById(spanId);
+                    if (spanElement) {
+                        spanElement.textContent = '00';
+                    }
+                }
+            }
+        }
     }
     TSOS.Memory = Memory;
 })(TSOS || (TSOS = {}));

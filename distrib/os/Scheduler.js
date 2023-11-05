@@ -20,15 +20,13 @@ var TSOS;
                         this.cyclesExecuted++;
                     }
                     else {
-                        // The program has terminated, end single-run mode and halt execution
                         this.isSingleRunMode = false;
-                        this.singleRunProgramPID = null; // Clear the single run PID
+                        this.singleRunProgramPID = null;
                         _CPU.isExecuting = false;
                     }
                 }
             }
             else {
-                // Normal round-robin execution if not in single-run mode
                 if (_CPU.isExecuting) {
                     _CPU.cycle();
                     this.cyclesExecuted++;
@@ -77,10 +75,7 @@ var TSOS;
                     _CPU.isExecuting = true;
                     this.cyclesExecuted = 0;
                 }
-                // The context switch logic in single-run mode is omitted because we do not switch
             }
-            // If single-run mode is active, we don't need to save the state or switch to another process
-            // So there is no else block needed here for single-run mode.
         }
         saveCPUState(program) {
             program.PC = _CPU.PC;
@@ -93,7 +88,6 @@ var TSOS;
         onProgramTermination() {
             _Programs[this.currentProgramIndex].state = "Terminated";
             if (this.isSingleRunMode) {
-                // In single-run mode, we should not look for the next program
                 this.isSingleRunMode = false;
                 this.singleRunProgramPID = null;
                 _CPU.isExecuting = false;

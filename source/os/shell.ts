@@ -132,6 +132,9 @@ module TSOS {
             sc = new ShellCommand(this.shellRunAll, "runall", "- runs all programs in memory'");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellKill, "kill", "- kill 'PID''");
+            this.commandList[this.commandList.length] = sc;
+
             
 
 
@@ -542,33 +545,29 @@ module TSOS {
 
         public shellClearMem = (): void => {
             _Memory.init();
-
+            
             _MemoryManager.pidToSegmentMap = {};
-        
-            _CPU.init(); 
-
-            _Scheduler.init(); 
-
-            _Programs.forEach(program => program.init()); 
-
+            
+            _CPU.init();
+            
+            _Scheduler.init();
+            
+            _Programs.forEach(program => program.init());
             _Programs = []; 
             
-            const memoryDisplayContainer = document.getElementById("memoryDisplay");
-            if (memoryDisplayContainer) {
-                memoryDisplayContainer.innerHTML = ''; 
-                
-            }
-        
+            _MemoryAccessor.updateMemoryDisplay();
             
             _StdOut.putText("Memory has been cleared.");
-
+            
             const pcbContainer = document.getElementById("pcb-container");
             if (pcbContainer) {
-                pcbContainer.innerHTML = ''; 
+                pcbContainer.innerHTML = '';
             }
-
-            _Programs = [];
+            
         }
+        
+        
+        
 
         public shellRunAll(): void {
             _CPU.isExecuting = true;
@@ -577,6 +576,37 @@ module TSOS {
             _Scheduler.cycleRoundRobin();
         }
         
+
+        public shellKill(args: string[]) {
+            if (args.length > 0) {
+                const pid = parseInt(args[0]);
+                
+                if (isNaN(pid)) {
+                    _StdOut.putText(`Please provide a valid PID.`);
+                    return;
+                }
+
+                let programExists = false;
+                const terminatedProgram = _Programs.find(program => program.segment === _CPU.segment);
+
+                for (let i = 0; i < _Programs.length; i++) {
+                    if (_Programs[i].PID === pid) {
+                        programExists = true;
+                        _Programs[i].state = "Terminated";
+                        _CPU.updatePCBDisplay(terminatedProgram);
+
+                        _StdOut.putText(`Program with PID ${pid} has been terminated.`);
+                        break;
+                    }
+                }
+
+                if (!programExists) {
+                    _StdOut.putText(`No program with PID ${pid} found.`);
+                }
+            } else {
+                _StdOut.putText("Usage: kill <PID>  Please supply a PID.");
+            }
+        }
         
 
 

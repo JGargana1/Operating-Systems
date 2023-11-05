@@ -91,14 +91,18 @@ var _GLaDOS: any = null; // If the above is linked in, this is the instantiated 
 
 var _Scheduler: TSOS.Scheduler;
 
+
+
 var onDocumentLoad = function() {
    _Memory = new TSOS.Memory();
    _MemoryManager = new TSOS.MemoryManager(_Memory);
    _MemoryAccessor = new TSOS.MemoryAccessor(_Memory);
+   
 
    _Scheduler = new TSOS.Scheduler();
 
    TSOS.Control.hostInit();
+
 };
 
 

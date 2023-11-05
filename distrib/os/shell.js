@@ -69,6 +69,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellRunAll, "runall", "- runs all programs in memory'");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellKill, "kill", "- kill 'PID''");
+            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -396,21 +398,17 @@ var TSOS;
                 _StdOut.putText(`Sorry, this program has been terminated`);
                 return;
             }
-            // If the CPU is already executing, we shouldn't start another program.
             if (_CPU.isExecuting) {
                 _StdOut.putText(`CPU is already running a program.`);
                 return;
             }
-            // Set up the CPU registers with the state of the program to run.
             _Scheduler.prepareProgram(programToRun);
             // Set Scheduler to single-run mode.
             _Scheduler.isSingleRunMode = true;
             _Scheduler.singleRunProgramPID = programToRun.PID;
-            _Scheduler.currentProgramIndex = _Programs.indexOf(programToRun); // Get the index of the program
-            // Update the program state to "Running".
+            _Scheduler.currentProgramIndex = _Programs.indexOf(programToRun);
             programToRun.state = "Running";
-            // Call the CPU run method to start executing the program.
-            _CPU.run(); // Make sure this method runs the CPU cycle for the current program only.
+            _CPU.run();
             _StdOut.putText(`Running program with PID: ${pid}`);
         }
         shellClearMem = () => {
@@ -420,22 +418,44 @@ var TSOS;
             _Scheduler.init();
             _Programs.forEach(program => program.init());
             _Programs = [];
-            const memoryDisplayContainer = document.getElementById("memoryDisplay");
-            if (memoryDisplayContainer) {
-                memoryDisplayContainer.innerHTML = '';
-            }
+            _MemoryAccessor.updateMemoryDisplay();
             _StdOut.putText("Memory has been cleared.");
             const pcbContainer = document.getElementById("pcb-container");
             if (pcbContainer) {
                 pcbContainer.innerHTML = '';
             }
-            _Programs = [];
         };
         shellRunAll() {
             _CPU.isExecuting = true;
             _Scheduler.currentProgramIndex = 0;
             _Scheduler.cyclesExecuted = 0;
             _Scheduler.cycleRoundRobin();
+        }
+        shellKill(args) {
+            if (args.length > 0) {
+                const pid = parseInt(args[0]);
+                if (isNaN(pid)) {
+                    _StdOut.putText(`Please provide a valid PID.`);
+                    return;
+                }
+                let programExists = false;
+                const terminatedProgram = _Programs.find(program => program.segment === _CPU.segment);
+                for (let i = 0; i < _Programs.length; i++) {
+                    if (_Programs[i].PID === pid) {
+                        programExists = true;
+                        _Programs[i].state = "Terminated";
+                        _CPU.updatePCBDisplay(terminatedProgram);
+                        _StdOut.putText(`Program with PID ${pid} has been terminated.`);
+                        break;
+                    }
+                }
+                if (!programExists) {
+                    _StdOut.putText(`No program with PID ${pid} found.`);
+                }
+            }
+            else {
+                _StdOut.putText("Usage: kill <PID>  Please supply a PID.");
+            }
         }
     }
     TSOS.Shell = Shell;
