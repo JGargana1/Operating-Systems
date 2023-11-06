@@ -141,6 +141,9 @@ module TSOS {
             sc = new ShellCommand(this.shellQuantum, "quantum", "- quantum 'int' sets the quantum");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellPS, "ps", "- Displays the PID and state of all processes");
+            this.commandList[this.commandList.length] = sc;
+
 
 
 
@@ -643,6 +646,20 @@ module TSOS {
                 _StdOut.putText("Usage: quantum 'int' - Display or set the quantum value.");
             }
         }
+
+        public shellPS(args: string[]): void {
+            if (_Programs.length === 0) {
+                _StdOut.putText("No loaded programs.");
+                return;
+            }
+            _StdOut.advanceLine();
+            _Programs.forEach(program => {
+                _StdOut.putText(`PID: ${program.PID}\tState: ${program.state}`);
+                _StdOut.advanceLine();
+            });
+        }
+        
+        
         
         
 

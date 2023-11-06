@@ -75,6 +75,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellQuantum, "quantum", "- quantum 'int' sets the quantum");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellPS, "ps", "- Displays the PID and state of all processes");
+            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -492,6 +494,17 @@ var TSOS;
             else {
                 _StdOut.putText("Usage: quantum 'int' - Display or set the quantum value.");
             }
+        }
+        shellPS(args) {
+            if (_Programs.length === 0) {
+                _StdOut.putText("No loaded programs.");
+                return;
+            }
+            _StdOut.advanceLine();
+            _Programs.forEach(program => {
+                _StdOut.putText(`PID: ${program.PID}\tState: ${program.state}`);
+                _StdOut.advanceLine();
+            });
         }
     }
     TSOS.Shell = Shell;
