@@ -89,6 +89,7 @@ var TSOS;
                         this.PC++;
                         break;
                     case "00":
+                        this.break();
                         this.terminateProgram();
                         _Scheduler.onProgramTermination();
                         break;
