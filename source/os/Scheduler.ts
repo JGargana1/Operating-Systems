@@ -119,7 +119,6 @@ module TSOS {
                 this.isSingleRunMode = false;
                 this.singleRunProgramPID = null;
                 _CPU.isExecuting = false;
-                _StdOut.putText(`Program with PID: ${_Programs[this.currentProgramIndex].PID} has terminated.`);
             } else {
                 // Proceed with normal round-robin termination
                 let nextProgramIndex = this.findNextProgram();

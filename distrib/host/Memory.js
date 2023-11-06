@@ -8,8 +8,8 @@ var TSOS;
         constructor(segments = 3, segmentSize = 256) {
             this.segments = segments;
             this.segmentSize = segmentSize;
-            this.memorySegments = new Array(segments).fill([]).map(_ => new Array(segmentSize).fill("00"));
-            this.byteOccupiedFlags = new Array(segments).fill([]).map(_ => new Array(segmentSize).fill(false));
+            this.memorySegments = new Array(segments).fill(null).map(_ => new Array(segmentSize).fill("00"));
+            this.byteOccupiedFlags = new Array(segments).fill(null).map(_ => new Array(segmentSize).fill(false));
         }
         init() {
             for (let segment = 0; segment < this.segments; segment++) {

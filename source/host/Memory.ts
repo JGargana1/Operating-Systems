@@ -4,11 +4,8 @@ module TSOS {
         public byteOccupiedFlags: boolean[][];
 
         constructor(public segments: number = 3, public segmentSize: number = 256) {
-            this.memorySegments = new Array(segments).fill([]).map(_ => new Array(segmentSize).fill("00"));
-            this.byteOccupiedFlags = new Array(segments).fill([]).map(_ => new Array(segmentSize).fill(false));
-
-            
-
+            this.memorySegments = new Array(segments).fill(null).map(_ => new Array(segmentSize).fill("00"));
+            this.byteOccupiedFlags = new Array(segments).fill(null).map(_ => new Array(segmentSize).fill(false));
         }
 
         public init(): void {
