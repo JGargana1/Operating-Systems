@@ -9,15 +9,18 @@
 }
 
 .memory-segment {
-  width: 100%;
+  width: 50%; 
+  max-width: 600px; 
   height: 200px; 
-  overflow: auto; 
+  overflow: auto;
   margin-bottom: 20px;
   border: 1px solid #000;
+  margin-left: auto; 
+  margin-right: auto;
 }
 
 .memory-segment table {
-  width: 100%;
+  width: 100%; 
   table-layout: fixed;
   border-collapse: collapse;
 }
@@ -25,9 +28,9 @@
 .memory-segment th, .memory-segment td {
   border: 1px solid #000;
   text-align: center;
-  width: 12.5%; 
-  padding: 5px;
-  font-family: monospace; 
+  padding: 2px; 
+  font-family: monospace;
+  font-size: 0.8em; 
 }
 
 
