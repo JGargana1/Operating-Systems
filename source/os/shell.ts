@@ -560,26 +560,26 @@ module TSOS {
 
         public shellClearMem = (): void => {
             _Memory.init();
-            
+        
             _MemoryManager.pidToSegmentMap = {};
-            
+        
             _CPU.init();
-            
+        
             _Scheduler.init();
-            
+        
             _Programs.forEach(program => program.init());
             _Programs = []; 
-            
-            _MemoryAccessor.updateMemoryDisplay();
-            
+        
             _StdOut.putText("Memory has been cleared.");
-            
+        
             const pcbContainer = document.getElementById("pcb-container");
             if (pcbContainer) {
                 pcbContainer.innerHTML = '';
             }
-            
+        
+            _Memory.displayMemory(_Memory);
         }
+        
         
         
         
@@ -610,13 +610,13 @@ module TSOS {
                         _Programs[i].state = "Terminated";
                         _CPU.updatePCBDisplay(terminatedProgram);
 
-                        _StdOut.putText('Program with PID ${pid} has been terminated.');
+                        _StdOut.putText(`Program with PID ${pid} has been terminated.`);
                         break;
                     }
                 }
 
                 if (!programExists) {
-                    _StdOut.putText('No program with PID ${pid} found.');
+                    _StdOut.putText(`No program with PID ${pid} found.`);
                 }
             } else {
                 _StdOut.putText("Usage: kill <PID>  Please supply a PID.");
@@ -641,12 +641,12 @@ module TSOS {
 
         public shellQuantum(args: string[]): void {
             if (args.length === 0) {
-                _StdOut.putText('Current quantum is set to ${_Scheduler.quantum}.');
+                _StdOut.putText(`Current quantum is set to ${_Scheduler.quantum}.`);
             } else if (args.length === 1) {
                 const newQuantum = parseInt(args[0]);
                 if (!isNaN(newQuantum)) {
                     _Scheduler.quantum = newQuantum;
-                    _StdOut.putText('Quantum updated to ${newQuantum}.');
+                    _StdOut.putText(`Quantum updated to ${newQuantum}.`);
                 } else {
                     _StdOut.putText("Invalid quantum value. Please provide a valid integer.");
                 }

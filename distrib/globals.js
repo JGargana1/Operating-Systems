@@ -62,6 +62,7 @@ var onDocumentLoad = function () {
     _MemoryManager = new TSOS.MemoryManager(_Memory);
     _MemoryAccessor = new TSOS.MemoryAccessor(_Memory);
     _Scheduler = new TSOS.Scheduler();
+    _Memory.displayMemory(_Memory);
     TSOS.Control.hostInit();
 };
 //# sourceMappingURL=globals.js.map

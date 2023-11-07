@@ -20,21 +20,24 @@ module TSOS {
             if (address < 0 || address >= this.memory.segmentSize) {
                 _Kernel.krnTrace(`Memory write violation at segment ${segment}, address ${address}`);
                 _StdOut.putText(`Memory write violation at segment ${segment}, address ${address}`);
-
+        
                 throw new Error(`Memory write violation at segment ${segment}, address ${address}`);
                 
             }
             if (!this.checkAddressWithinSegmentBounds(segment, address)) {
                 _Kernel.krnTrace(`Memory write out of segment bounds at segment ${segment}, address ${address}`);
                 _StdOut.putText(`Memory write out of segment bounds at segment ${segment}, address ${address}`);
-
+        
                 throw new Error(`Memory write out of segment bounds at segment ${segment}, address ${address}`);
             }
-
-            _Kernel.krnTrace(`Writing to memory at segment ${segment} and address ${address} with value ${value}`);``
+        
             this.memory.memorySegments[segment][address] = value;
-            this.updateMemoryDisplay();
+        
+            this.memory.updateMemoryDisplay(segment, address, value);
+        
+            
         }
+        
 
         private checkAddressWithinSegmentBounds(segment: number, address: number): boolean {
             let base = _MemoryManager.segmentBases[segment];
@@ -46,24 +49,7 @@ module TSOS {
             return this.memory.memorySegments.length * this.memory.segmentSize; 
         }
 
-        public updateMemoryDisplay(): void {
-            for (let segment = 0; segment < this.memory.segments; segment++) {
-                const segmentContent = document.getElementById(`segment-${segment}`);
-                if (segmentContent) {
-                    segmentContent.innerHTML = '';
-
-                    for (let i = 0; i < this.memory.segmentSize; i++) {
-                        const byteValue = this.memory.memorySegments[segment][i];
-                        const byteSpan = document.createElement('span');
-                        byteSpan.textContent = byteValue;
-                        segmentContent.appendChild(byteSpan);
-                    }
-                }
-            }
-        }
-        
-        
-        
+       
         
 
        

@@ -408,21 +408,14 @@ var TSOS;
                 _StdOut.putText(`CPU is already running a program.`);
                 return;
             }
-            // Reset the program's state in case it's stuck in an incorrect state
             programToRun.state = "Ready";
-            // Reset the CPU's execution state in case it's not been properly cleared
             _CPU.init();
-            // Set the Scheduler to single-run mode and assign the program's PID to it
             _Scheduler.isSingleRunMode = true;
             _Scheduler.singleRunProgramPID = programToRun.PID;
             _Scheduler.currentProgramIndex = _Programs.indexOf(programToRun);
-            // Prepare the CPU to run the specified program
             _Scheduler.prepareProgram(programToRun);
-            // Update the display
             _CPU.updatePCBDisplay(programToRun);
-            // Start CPU execution
             _CPU.isExecuting = true;
-            // Begin the cycle with the single program
             _Scheduler.cycleRoundRobin();
             _StdOut.putText(`Running program with PID: ${pid}`);
         }
@@ -433,12 +426,12 @@ var TSOS;
             _Scheduler.init();
             _Programs.forEach(program => program.init());
             _Programs = [];
-            _MemoryAccessor.updateMemoryDisplay();
             _StdOut.putText("Memory has been cleared.");
             const pcbContainer = document.getElementById("pcb-container");
             if (pcbContainer) {
                 pcbContainer.innerHTML = '';
             }
+            _Memory.displayMemory(_Memory);
         };
         shellRunAll() {
             _CPU.isExecuting = true;
@@ -460,12 +453,12 @@ var TSOS;
                         programExists = true;
                         _Programs[i].state = "Terminated";
                         _CPU.updatePCBDisplay(terminatedProgram);
-                        _StdOut.putText('Program with PID ${pid} has been terminated.');
+                        _StdOut.putText(`Program with PID ${pid} has been terminated.`);
                         break;
                     }
                 }
                 if (!programExists) {
-                    _StdOut.putText('No program with PID ${pid} found.');
+                    _StdOut.putText(`No program with PID ${pid} found.`);
                 }
             }
             else {
@@ -488,13 +481,13 @@ var TSOS;
         }
         shellQuantum(args) {
             if (args.length === 0) {
-                _StdOut.putText('Current quantum is set to ${_Scheduler.quantum}.');
+                _StdOut.putText(`Current quantum is set to ${_Scheduler.quantum}.`);
             }
             else if (args.length === 1) {
                 const newQuantum = parseInt(args[0]);
                 if (!isNaN(newQuantum)) {
                     _Scheduler.quantum = newQuantum;
-                    _StdOut.putText('Quantum updated to ${newQuantum}.');
+                    _StdOut.putText(`Quantum updated to ${newQuantum}.`);
                 }
                 else {
                     _StdOut.putText("Invalid quantum value. Please provide a valid integer.");

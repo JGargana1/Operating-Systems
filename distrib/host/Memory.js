@@ -19,26 +19,40 @@ var TSOS;
                 }
             }
         }
-        generateMemoryDisplay() {
-            for (let segment = 0; segment < 3; segment++) {
-                const segmentContent = document.getElementById(`segment-${segment}`);
-                for (let byte = 0; byte < 256; byte++) {
-                    const span = document.createElement('span');
-                    span.id = `byte-${segment}-${byte}`;
-                    span.textContent = '00';
-                    segmentContent.appendChild(span);
-                }
+        displayMemory(memory) {
+            const container = document.getElementById('memory-segment-container');
+            if (!container) {
+                console.error('Memory segment container not found.');
+                return;
             }
-        }
-        static resetMemoryDisplay() {
-            for (let segment = 0; segment < 3; segment++) {
-                for (let byte = 0; byte < 256; byte++) {
-                    const spanId = `byte-${segment}-${byte}`;
-                    const spanElement = document.getElementById(spanId);
-                    if (spanElement) {
-                        spanElement.textContent = '00';
+            container.innerHTML = '';
+            memory.memorySegments.forEach((segment, segmentIndex) => {
+                const segmentDiv = document.createElement('div');
+                segmentDiv.className = 'memory-segment';
+                segmentDiv.id = `segment-${segmentIndex}`;
+                const segmentTitle = document.createElement('h3');
+                segmentTitle.textContent = `Segment ${segmentIndex + 1}`;
+                segmentDiv.appendChild(segmentTitle);
+                const table = document.createElement('table');
+                for (let i = 0; i < memory.segmentSize / 8; i++) {
+                    const tr = document.createElement('tr');
+                    for (let j = 0; j < 8; j++) {
+                        const td = document.createElement('td');
+                        td.textContent = segment[i * 8 + j];
+                        td.id = `segment-${segmentIndex}-byte-${i * 8 + j}`;
+                        tr.appendChild(td);
                     }
+                    table.appendChild(tr);
                 }
+                segmentDiv.appendChild(table);
+                container.appendChild(segmentDiv);
+            });
+        }
+        updateMemoryDisplay(segment, address, value) {
+            const byteId = `segment-${segment}-byte-${address}`;
+            const byteElement = document.getElementById(byteId);
+            if (byteElement) {
+                byteElement.textContent = value;
             }
         }
     }

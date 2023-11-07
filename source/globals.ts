@@ -101,6 +101,9 @@ var onDocumentLoad = function() {
 
    _Scheduler = new TSOS.Scheduler();
 
+   _Memory.displayMemory(_Memory);
+
+
    TSOS.Control.hostInit();
 
 };
