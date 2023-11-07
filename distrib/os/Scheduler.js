@@ -11,34 +11,41 @@ var TSOS;
             this.cyclesExecuted = 0;
         }
         cycleRoundRobin() {
-            if (this.isSingleRunMode) {
-                // Only run the current program if we're in single-run mode
-                const currentProgram = _Programs[this.currentProgramIndex];
-                if (currentProgram && currentProgram.PID === this.singleRunProgramPID) {
-                    if (currentProgram.state !== "Terminated") {
-                        _CPU.cycle(); // Execute the CPU cycle for the current program
-                        this.cyclesExecuted++;
-                    }
-                    else {
-                        this.isSingleRunMode = false;
-                        this.singleRunProgramPID = null;
-                        _CPU.isExecuting = false;
-                    }
+            // Check if we are in single-run mode and that the specific program's PID is set
+            if (this.isSingleRunMode && this.singleRunProgramPID !== null) {
+                // In single-run mode, we find the specific program and run it exclusively
+                let program = _Programs.find(p => p.PID === this.singleRunProgramPID);
+                if (program && program.state !== "Terminated") {
+                    // If the program is found and it is not terminated, execute it
+                    program.state = "Running"; // Update the state to "Running"
+                    _CPU.updatePCBDisplay(program); // Update the display to reflect the state
+                    _CPU.cycle(); // Perform a CPU cycle
+                    // No need for a quantum check in single-run mode
+                }
+                else {
+                    // If the program is terminated or not found, we exit single-run mode
+                    this.exitSingleRunMode();
                 }
             }
             else {
+                // Normal round-robin execution
                 if (_CPU.isExecuting) {
-                    const currentProgram = _Programs[this.currentProgramIndex];
+                    let currentProgram = _Programs[this.currentProgramIndex];
                     if (currentProgram && currentProgram.state !== "Terminated") {
-                        _CPU.cycle();
+                        currentProgram.state = "Running"; // Set the program state to "Running"
+                        _CPU.updatePCBDisplay(currentProgram); // Update the display to reflect the state
+                        _CPU.cycle(); // Perform a CPU cycle
                         this.cyclesExecuted++;
+                        if (this.cyclesExecuted >= this.quantum) {
+                            this.contextSwitch(); // Perform a context switch if the quantum is reached
+                        }
                     }
-                    if (this.cyclesExecuted >= this.quantum) {
-                        this.contextSwitch();
+                    else {
+                        this.contextSwitch(); // If the program is terminated, perform a context switch
                     }
                 }
                 else {
-                    this.executeNonTerminatedPrograms();
+                    this.contextSwitch(); // If no program is currently executing, perform a context switch
                 }
             }
         }
@@ -77,48 +84,82 @@ var TSOS;
             _CPU.Yreg = program.Yreg;
             _CPU.Zflag = program.Zflag;
             _CPU.segment = program.segment;
+            program.state = "Running";
         }
         contextSwitch() {
+            // Perform context switch only if we are not in single-run mode
             if (!this.isSingleRunMode) {
-                // Save CPU state for the current program
-                this.saveCPUState(_Programs[this.currentProgramIndex]);
-                // Find the index of the next program to run
-                let nextProgramIndex = this.findNextProgram();
-                if (nextProgramIndex !== -1) {
-                    this.prepareProgram(_Programs[nextProgramIndex]);
-                    this.currentProgramIndex = nextProgramIndex;
-                    _CPU.isExecuting = true;
-                    this.cyclesExecuted = 0;
+                // Save the CPU state of the current program, if it was running
+                if (_CPU.isExecuting) {
+                    let currentProgram = _Programs[this.currentProgramIndex];
+                    this.saveCPUState(currentProgram);
+                    // If the program is not terminated, change its state to "Ready"
+                    if (currentProgram.state !== "Terminated") {
+                        currentProgram.state = "Ready";
+                        _CPU.updatePCBDisplay(currentProgram); // Make sure to update the display
+                    }
                 }
-            }
-        }
-        saveCPUState(program) {
-            program.PC = _CPU.PC;
-            program.Acc = _CPU.Acc;
-            program.Xreg = _CPU.Xreg;
-            program.Yreg = _CPU.Yreg;
-            program.Zflag = _CPU.Zflag;
-            program.state = "Ready";
-        }
-        onProgramTermination() {
-            _Programs[this.currentProgramIndex].state = "Terminated";
-            if (this.isSingleRunMode) {
-                this.isSingleRunMode = false;
-                this.singleRunProgramPID = null;
-                _CPU.isExecuting = false;
-            }
-            else {
-                // Proceed with normal round-robin termination
+                // Find the next program that is not terminated
                 let nextProgramIndex = this.findNextProgram();
                 if (nextProgramIndex !== -1) {
+                    // If there is another program to execute, switch to it
                     this.currentProgramIndex = nextProgramIndex;
-                    this.prepareProgram(_Programs[nextProgramIndex]);
+                    let nextProgram = _Programs[nextProgramIndex];
+                    // Do not set the next program's state to "Running" here; it will be set when the CPU cycle starts for this program
+                    this.prepareProgram(nextProgram);
                     _CPU.isExecuting = true;
                     this.cyclesExecuted = 0;
                 }
                 else {
-                    _Kernel.krnTrace("All programs have terminated.");
+                    // If no non-terminated programs are left, stop CPU execution and reset current index
+                    _Kernel.krnTrace("No non-terminated programs to run.");
                     _CPU.isExecuting = false;
+                    this.currentProgramIndex = -1;
+                }
+            }
+        }
+        exitSingleRunMode() {
+            // Reset single-run mode settings
+            this.isSingleRunMode = false;
+            this.singleRunProgramPID = null;
+            _CPU.isExecuting = false;
+            this.currentProgramIndex = -1; // Reset the index as no program is running
+        }
+        saveCPUState(program) {
+            if (_CPU.isExecuting) {
+                program.PC = _CPU.PC;
+                program.Acc = _CPU.Acc;
+                program.Xreg = _CPU.Xreg;
+                program.Yreg = _CPU.Yreg;
+                program.Zflag = _CPU.Zflag;
+            }
+        }
+        onProgramTermination() {
+            let currentProgram = _Programs[this.currentProgramIndex];
+            currentProgram.state = "Terminated";
+            _CPU.isExecuting = false; // Stop CPU execution for the current program
+            // If we are in single-run mode, reset related flags and output termination message
+            if (this.isSingleRunMode) {
+                this.isSingleRunMode = false;
+                this.singleRunProgramPID = null;
+                _StdOut.putText(`Program with PID: ${currentProgram.PID} has terminated.`);
+                this.exitSingleRunMode();
+            }
+            else {
+                // In round-robin mode, we should find the next program to run
+                let nextProgramIndex = this.findNextProgram();
+                if (nextProgramIndex !== -1) {
+                    // If there's another program to run, prepare it and continue execution
+                    this.currentProgramIndex = nextProgramIndex;
+                    let nextProgram = _Programs[nextProgramIndex];
+                    this.prepareProgram(nextProgram);
+                    nextProgram.state = "Running"; // Set the state of the new program to "Running"
+                    _CPU.isExecuting = true; // Start CPU execution for the new program
+                    this.cyclesExecuted = 0; // Reset the cycle counter for the quantum
+                }
+                else {
+                    // If there are no more programs to run, output a trace message
+                    _Kernel.krnTrace("All programs have terminated.");
                 }
             }
         }

@@ -400,21 +400,30 @@ var TSOS;
                 _StdOut.putText(`No program with PID: ${pid} found.`);
                 return;
             }
-            if (programToRun.state === "Terminated") {
-                _StdOut.putText(`Sorry, this program has been terminated`);
+            if (programToRun.state === "Terminated" || programToRun.state === "Completed") {
+                _StdOut.putText(`Program with PID: ${pid} has already run to completion.`);
                 return;
             }
             if (_CPU.isExecuting) {
                 _StdOut.putText(`CPU is already running a program.`);
                 return;
             }
-            _Scheduler.prepareProgram(programToRun);
-            // Set Scheduler to single-run mode.
+            // Reset the program's state in case it's stuck in an incorrect state
+            programToRun.state = "Ready";
+            // Reset the CPU's execution state in case it's not been properly cleared
+            _CPU.init();
+            // Set the Scheduler to single-run mode and assign the program's PID to it
             _Scheduler.isSingleRunMode = true;
             _Scheduler.singleRunProgramPID = programToRun.PID;
             _Scheduler.currentProgramIndex = _Programs.indexOf(programToRun);
-            programToRun.state = "Running";
-            _CPU.run();
+            // Prepare the CPU to run the specified program
+            _Scheduler.prepareProgram(programToRun);
+            // Update the display
+            _CPU.updatePCBDisplay(programToRun);
+            // Start CPU execution
+            _CPU.isExecuting = true;
+            // Begin the cycle with the single program
+            _Scheduler.cycleRoundRobin();
             _StdOut.putText(`Running program with PID: ${pid}`);
         }
         shellClearMem = () => {

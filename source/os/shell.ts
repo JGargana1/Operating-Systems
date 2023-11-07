@@ -511,43 +511,51 @@ module TSOS {
                 _StdOut.putText("Please specify a PID to run.");
                 return;
             }
-            
+        
             const pid = parseInt(args[0]);
             if (isNaN(pid)) {
                 _StdOut.putText("Invalid PID. Please enter a numeric PID.");
                 return;
             }
-            
+        
             const programToRun = _Programs.find(program => program.PID === pid);
-            
+        
             if (!programToRun) {
                 _StdOut.putText(`No program with PID: ${pid} found.`);
                 return;
             }
-            
-            if (programToRun.state === "Terminated") {
-                _StdOut.putText(`Sorry, this program has been terminated`);
+        
+            if (programToRun.state === "Terminated" || programToRun.state === "Completed") {
+                _StdOut.putText(`Program with PID: ${pid} has already run to completion.`);
                 return;
             }
-            
+        
             if (_CPU.isExecuting) {
                 _StdOut.putText(`CPU is already running a program.`);
                 return;
             }
-            
-            _Scheduler.prepareProgram(programToRun);
-            
-            // Set Scheduler to single-run mode.
+        
+            programToRun.state = "Ready";
+        
+            _CPU.init();
+        
             _Scheduler.isSingleRunMode = true;
             _Scheduler.singleRunProgramPID = programToRun.PID;
-            _Scheduler.currentProgramIndex = _Programs.indexOf(programToRun); 
-            
-            programToRun.state = "Running";
-            
-            _CPU.run(); 
-            
+            _Scheduler.currentProgramIndex = _Programs.indexOf(programToRun);
+        
+            _Scheduler.prepareProgram(programToRun);
+        
+            _CPU.updatePCBDisplay(programToRun);
+        
+            _CPU.isExecuting = true;
+        
+            _Scheduler.cycleRoundRobin();
+        
             _StdOut.putText(`Running program with PID: ${pid}`);
         }
+        
+        
+        
         
 
         public shellClearMem = (): void => {
