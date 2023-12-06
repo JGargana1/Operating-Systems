@@ -62,7 +62,7 @@ var	_MemoryAccessor:	TSOS.MemoryAccessor;
 
 //	Software	(OS)
 
-
+var _HardDisk: TSOS.HardDisk;
 
 
 let _Programs: TSOS.Program[] = [];
@@ -107,7 +107,7 @@ var onDocumentLoad = function() {
 
    _Memory.displayMemory(_Memory);
 
-   
+   _HardDisk = new TSOS.HardDisk();
 
 
    TSOS.Control.hostInit();

@@ -144,7 +144,9 @@ module TSOS {
             sc = new ShellCommand(this.shellPS, "ps", "- Displays the PID and state of all processes");
             this.commandList[this.commandList.length] = sc;
 
-            
+            sc = new ShellCommand(this.shellFormat, "format", "- Formats the disc");
+            this.commandList[this.commandList.length] = sc;
+
 
 
 
@@ -667,6 +669,11 @@ module TSOS {
                 _StdOut.putText(`PID: ${program.PID}\tState: ${program.state}`);
                 _StdOut.advanceLine();
             });
+        }
+
+        public shellFormat(): void {
+            _HardDisk.formatDisk();
+            _HardDisk.displayDisk();
         }
 
         
