@@ -77,8 +77,6 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellPS, "ps", "- Displays the PID and state of all processes");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellFormat, "format", "- Formats the disc");
-            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -509,10 +507,6 @@ var TSOS;
                 _StdOut.putText(`PID: ${program.PID}\tState: ${program.state}`);
                 _StdOut.advanceLine();
             });
-        }
-        shellFormat() {
-            _HardDisk.formatDisk();
-            _HardDisk.displayDisk();
         }
     }
     TSOS.Shell = Shell;

@@ -40,7 +40,6 @@ var _KernelBuffers = null;
 var _Memory;
 var _MemoryAccessor;
 //	Software	(OS)
-var _HardDisk;
 let _Programs = [];
 var _MemoryManager = null;
 // Standard input and output
@@ -64,7 +63,6 @@ var onDocumentLoad = function () {
     _MemoryAccessor = new TSOS.MemoryAccessor(_Memory);
     _Scheduler = new TSOS.Scheduler();
     _Memory.displayMemory(_Memory);
-    _HardDisk = new TSOS.HardDisk();
     TSOS.Control.hostInit();
 };
 //# sourceMappingURL=globals.js.map
