@@ -1,9 +1,18 @@
 module TSOS {
     export class HardDisk {
-        private diskBlocks: DiskBlock[][][];
+        public diskBlocks: DiskBlock[][][];
+        public formatted: boolean;  
 
         constructor() {
-            this.diskBlocks = this.loadFromSessionStorage() || this.initializeDisk();
+            const loadedData = this.loadFromSessionStorage();
+            this.diskBlocks = loadedData ? loadedData.diskBlocks : this.initializeDisk();
+            this.formatted = loadedData ? loadedData.formatted : false;
+        }
+
+        public formatDisk(): void {
+            this.diskBlocks = this.initializeDisk();
+            this.formatted = true;
+            this.saveToSessionStorage();
         }
 
         private initializeDisk(): DiskBlock[][][] {
@@ -14,18 +23,20 @@ module TSOS {
             );
         }
 
-        public formatDisk(): void {
-            this.diskBlocks = this.initializeDisk();
-            this.saveToSessionStorage();
-        }
+        
 
-        private loadFromSessionStorage(): DiskBlock[][][] | null {
+        public loadFromSessionStorage(): { diskBlocks: DiskBlock[][][], formatted: boolean } | null {
             const diskData = sessionStorage.getItem('hardDisk');
-            return diskData ? JSON.parse(diskData) : null;
+            if (diskData) {
+                const parsedData = JSON.parse(diskData);
+                return parsedData;
+            }
+            return null;
         }
 
-        private saveToSessionStorage(): void {
-            sessionStorage.setItem('hardDisk', JSON.stringify(this.diskBlocks));
+        public saveToSessionStorage(): void {
+            const diskData = { diskBlocks: this.diskBlocks, formatted: this.formatted };
+            sessionStorage.setItem('hardDisk', JSON.stringify(diskData));
         }
 
         public displayDisk(): void {

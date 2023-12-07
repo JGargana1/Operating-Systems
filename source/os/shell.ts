@@ -432,57 +432,142 @@ module TSOS {
 
         public shellLoad = (args: string[]): void => {
             const input: string = (document.getElementById('taProgramInput') as HTMLInputElement).value;
-
-
-            
-            // Validate that the input is not empty and contains only valid hexadecimal characters.
-            const isValid: boolean = /^[0-9A-Fa-f\s]+$/.test(input);
         
+            // Validate input
+            const isValid: boolean = /^[0-9A-Fa-f\s]+$/.test(input);
             if (!isValid) {
-                if (input === "") {
-                    _StdOut.putText("The input is empty.");
-                } else {
-                    _StdOut.putText("The input is invalid. Only hex digits and spaces are allowed.");
-                }
+                _StdOut.putText(input === "" ? "The input is empty." : "The input is invalid. Only hex digits and spaces are allowed.");
                 return;
             }
         
             const opCodes: string[] = input.split(/\s+/);
-        
             if (opCodes.length > _Memory.segmentSize) {
                 _StdOut.putText("The input exceeds the memory segment capacity.");
                 return;
             }
         
             const freeSegment: number = _MemoryManager.findFreeSegment();
+            if (freeSegment !== -1) {
+                // Load program into memory if there is a free segment
+                this.loadProgramToMemory(opCodes, freeSegment);
+            } else {
+                // Check if the disk is formatted before attempting to load onto it
+                if (_HardDisk && _HardDisk.formatted) {
+                    this.loadProgramToDisk(opCodes);
+                    _HardDisk.displayDisk(); 
+                } else {
+                    _StdOut.putText("You need to format the disk.");
+                }
+            }
+        };
         
-            if (freeSegment === -1) {
-                _StdOut.putText("Sorry, all memory segments are full, please clear memory.");
+
+        
+        
+        private loadProgramToMemory(opCodes: string[], segment: number): void {
+            let startingAddress = 0;
+            const newProgram = new Program(_PID, startingAddress, startingAddress + opCodes.length - 1, segment);
+        
+            _Programs.push(newProgram);
+            for (let i = 0; i < opCodes.length; i++) {
+                _MemoryAccessor.write(segment, startingAddress + i, opCodes[i]);
+                _MemoryManager.setByteOccupied(segment, startingAddress + i, true);
+                console.log(`Loaded value ${opCodes[i]} to address ${startingAddress + i} in segment ${segment}`);
+            }
+        
+            _MemoryManager.assignSegmentToPID(_PID, segment);
+            _StdOut.putText(`Program loaded with PID: ${_PID} in segment ${segment}`);
+            this.createPCBDisplay(newProgram); 
+            _PID++;
+        }
+        
+        private loadProgramToDisk(opCodes: string[]): void {
+            const pidHexString = this.convertToHex(`.swap${_PID}`);
+        
+            const programData = opCodes.join("");
+        
+            const dataChunks = [];
+            for (let i = 0; i < programData.length; i += 60) {
+                dataChunks.push(programData.substring(i, Math.min(i + 60, programData.length)));
+            }
+        
+            if (dataChunks.length === 0) {
+                _StdOut.putText("Program data is empty");
                 return;
             }
         
-            let startingAddress = 0;
-            const newProgram = new Program(_PID, startingAddress, startingAddress + opCodes.length - 1, freeSegment);
-
+            let firstBlockKey = "";
+            let prevBlockKey = "";
         
-            _Programs.push(newProgram);
+            for (let i = 0; i < dataChunks.length; i++) {
+                let freeBlock = this.findFreeDataBlock();
+                if (!freeBlock) {
+                    _StdOut.putText("No free space on disk");
+                    return;
+                }
         
-            for (let i = 0; i < opCodes.length; i++) {
-                _MemoryAccessor.write(freeSegment, startingAddress + i, opCodes[i]);
+                // Store data in the free block
+                freeBlock.block.inUse = "1";
+                freeBlock.block.data = dataChunks[i].padEnd(60, "0");
         
-                _MemoryManager.setByteOccupied(freeSegment, startingAddress + i, true); 
+                if (i === 0) {
+                    firstBlockKey = freeBlock.key; 
+                } else {
+                    this.updateBlockKey(prevBlockKey, freeBlock.key);
+                }
         
-                console.log(`Loaded value ${opCodes[i]} to address ${startingAddress + i} in segment ${freeSegment}`);
+                prevBlockKey = freeBlock.key; 
             }
         
-            _MemoryManager.assignSegmentToPID(_PID, freeSegment);
+            // Update directory block for the first data block
+            this.updateDirectoryBlock(pidHexString, firstBlockKey);
         
-            _StdOut.putText(`Program loaded with PID: ${_PID} in segment ${freeSegment}`);
-        
-            this.createPCBDisplay(newProgram); 
-        
+            _HardDisk.saveToSessionStorage(); 
+            _StdOut.putText(`Program loaded onto disk with PID: ${_PID}`);
             _PID++;
         }
+
+        private findFreeDataBlock(): { key: string, block: DiskBlock } | null {
+            // Find a free data block in Tracks 1-3
+            for (let track = 1; track < 4; track++) {
+                for (let sector = 0; sector < 8; sector++) {
+                    for (let block = 0; block < 8; block++) {
+                        let dataBlock = _HardDisk.diskBlocks[track][sector][block];
+                        if (dataBlock.inUse === "0") {
+                            return { key: `${track}${sector}${block}`, block: dataBlock };
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+        
+        private updateDirectoryBlock(pidHexString: string, dataBlockKey: string): void {
+            for (let sector = 0; sector < 8; sector++) {
+                for (let block = 0; block < 8; block++) {
+                    let dirBlock = _HardDisk.diskBlocks[0][sector][block];
+                    if (dirBlock.inUse === "0") {
+                        dirBlock.inUse = "1";
+                        dirBlock.directoryKey = dataBlockKey;
+                        dirBlock.data = pidHexString.padEnd(60, "0");
+                        return;
+                    }
+                }
+            }
+            throw new Error("No free directory block found");
+        }
+        
+        private updateBlockKey(previousKey: string, nextBlockKey: string): void {
+            // Update the directory key of a block to point to the next block
+            let [track, sector, block] = previousKey.split('').map(Number);
+            let prevBlock = _HardDisk.diskBlocks[track][sector][block];
+            prevBlock.directoryKey = nextBlockKey;
+        }
+
+        private convertToHex(str: string): string {
+            return str.split('').map(char => char.charCodeAt(0).toString(16)).join('');
+        }
+        
         
 
         private createPCBDisplay(program: TSOS.Program): void {

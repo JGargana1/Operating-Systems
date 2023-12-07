@@ -2,22 +2,31 @@ var TSOS;
 (function (TSOS) {
     class HardDisk {
         diskBlocks;
+        formatted;
         constructor() {
-            this.diskBlocks = this.loadFromSessionStorage() || this.initializeDisk();
+            const loadedData = this.loadFromSessionStorage();
+            this.diskBlocks = loadedData ? loadedData.diskBlocks : this.initializeDisk();
+            this.formatted = loadedData ? loadedData.formatted : false;
+        }
+        formatDisk() {
+            this.diskBlocks = this.initializeDisk();
+            this.formatted = true;
+            this.saveToSessionStorage();
         }
         initializeDisk() {
             return Array.from({ length: 4 }, () => Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => new TSOS.DiskBlock())));
         }
-        formatDisk() {
-            this.diskBlocks = this.initializeDisk();
-            this.saveToSessionStorage();
-        }
         loadFromSessionStorage() {
             const diskData = sessionStorage.getItem('hardDisk');
-            return diskData ? JSON.parse(diskData) : null;
+            if (diskData) {
+                const parsedData = JSON.parse(diskData);
+                return parsedData;
+            }
+            return null;
         }
         saveToSessionStorage() {
-            sessionStorage.setItem('hardDisk', JSON.stringify(this.diskBlocks));
+            const diskData = { diskBlocks: this.diskBlocks, formatted: this.formatted };
+            sessionStorage.setItem('hardDisk', JSON.stringify(diskData));
         }
         displayDisk() {
             const diskContainer = document.getElementById('diskDisplay');
