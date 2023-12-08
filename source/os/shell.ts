@@ -152,6 +152,9 @@ module TSOS {
             sc = new ShellCommand(this.shellCreate, "create", "- create <filename>");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellWrite, "write", "- write <filename> 'data' ");
+            this.commandList[this.commandList.length] = sc;
+
 
 
 
@@ -827,6 +830,76 @@ module TSOS {
                 }
             }
             return null;
+        }
+        public shellWrite = (args: string[]): void => {
+            if (args.length < 2) {
+                _StdOut.putText("Usage: write <filename> \"data\"");
+                return;
+            }
+        
+            const filename = args[0];
+            let data = args.slice(1).join(" ");
+        
+            if (!(data.startsWith("\"") && data.endsWith("\""))) {
+                _StdOut.putText("Data must be enclosed in quotes.");
+                return;
+            }
+        
+            data = data.substring(1, data.length - 1);
+        
+            if (!_HardDisk || !_HardDisk.formatted) {
+                _StdOut.putText("Disk not formatted. Please format the disk before writing to files.");
+                return;
+            }
+        
+            const filenameHex = this.convertToHex(filename);
+            const dirBlock = this.findDirectoryBlock(filenameHex);
+        
+            if (!dirBlock) {
+                _StdOut.putText(`File '${filename}' not found.`);
+                return;
+            }
+        
+            const dataHex = this.convertToHex(data);
+        
+            this.writeDataToDisk(dirBlock.directoryKey, dataHex);
+        
+            _HardDisk.saveToSessionStorage(); 
+            _HardDisk.displayDisk(); 
+            _StdOut.putText(`Data written to file '${filename}'.`);
+        };
+        
+        private findDirectoryBlock(filenameHex: string): DiskBlock | null {
+            for (let sector = 0; sector < 8; sector++) {
+                for (let block = 0; block < 8; block++) {
+                    let dirBlock = _HardDisk.diskBlocks[0][sector][block];
+                    if (dirBlock.inUse === "1" && dirBlock.data.startsWith(filenameHex)) {
+                        return dirBlock;
+                    }
+                }
+            }
+            return null;
+        }
+        
+        private writeDataToDisk(startKey: string, dataHex: string): void {
+            let currentKey = startKey;
+            const dataChunks = this.splitIntoChunks(dataHex, 60);
+        
+            for (const chunk of dataChunks) {
+                const [track, sector, block] = currentKey.split('').map(Number);
+                const dataBlock = _HardDisk.diskBlocks[track][sector][block];
+        
+                dataBlock.data = chunk.padEnd(60, "0");
+                currentKey = dataBlock.directoryKey; 
+            }
+        }
+        
+        private splitIntoChunks(str: string, chunkSize: number): string[] {
+            const chunks = [];
+            for (let i = 0; i < str.length; i += chunkSize) {
+                chunks.push(str.substring(i, i + chunkSize));
+            }
+            return chunks;
         }
 
         
