@@ -83,6 +83,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellWrite, "write", "- write <filename> 'data' ");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRead, "read", "- read <filename>");
+            this.commandList[this.commandList.length] = sc;
             // Display the initial prompt.
             this.putPrompt();
         }
@@ -704,6 +706,47 @@ var TSOS;
                 chunks.push(str.substring(i, i + chunkSize));
             }
             return chunks;
+        }
+        shellRead = (args) => {
+            if (args.length < 1) {
+                _StdOut.putText("Usage: read <filename>");
+                return;
+            }
+            const filename = args[0];
+            if (!_HardDisk || !_HardDisk.formatted) {
+                _StdOut.putText("Disk not formatted. Please format the disk before reading files.");
+                return;
+            }
+            const filenameHex = this.convertToHex(filename);
+            const dirBlock = this.findDirectoryBlock(filenameHex);
+            if (!dirBlock) {
+                _StdOut.putText(`File '${filename}' not found.`);
+                return;
+            }
+            const dataHex = this.readDataFromDisk(dirBlock.directoryKey);
+            const data = this.convertHexToString(dataHex);
+            _StdOut.putText(`File '${filename}' contains: ${data}`);
+        };
+        readDataFromDisk(startKey) {
+            let currentKey = startKey;
+            let dataHex = "";
+            while (currentKey !== "000" && currentKey) {
+                const [track, sector, block] = currentKey.split('').map(Number);
+                const dataBlock = _HardDisk.diskBlocks[track][sector][block];
+                dataHex += dataBlock.data;
+                currentKey = dataBlock.directoryKey;
+            }
+            return dataHex;
+        }
+        convertHexToString(hexStr) {
+            let str = "";
+            for (let i = 0; i < hexStr.length; i += 2) {
+                const byte = hexStr.substr(i, 2);
+                if (byte !== "00") {
+                    str += String.fromCharCode(parseInt(byte, 16));
+                }
+            }
+            return str;
         }
     }
     TSOS.Shell = Shell;
