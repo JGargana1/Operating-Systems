@@ -92,6 +92,8 @@ module TSOS {
                                   "load", "- Validates the user code in the HTML5 text area.");
             this.commandList[this.commandList.length] = sc;
 
+            
+
 
         
 
@@ -145,6 +147,9 @@ module TSOS {
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellFormat, "format", "- Formats the disc");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellCreate, "create", "- create <filename>");
             this.commandList[this.commandList.length] = sc;
 
 
@@ -759,6 +764,69 @@ module TSOS {
         public shellFormat(): void {
             _HardDisk.formatDisk();
             _HardDisk.displayDisk();
+        }
+
+        public shellCreate = (args: string[]): void => {
+            if (args.length < 1) {
+                _StdOut.putText("Usage: create <filename>");
+                return;
+            }
+        
+            const filename = args[0];
+        
+            if (!_HardDisk || !_HardDisk.formatted) {
+                _StdOut.putText("Disk not formatted. Please format the disk before creating files.");
+                return;
+            }
+        
+            const filenameHex = this.convertToHex(filename);
+        
+            if (this.doesFileExist(filenameHex)) {
+                _StdOut.putText(`File '${filename}' already exists.`);
+                return;
+            }
+        
+            let freeDirBlock = this.findFreeDirectoryBlock();
+            let freeDataBlock = this.findFreeDataBlock();
+        
+            if (!freeDirBlock || !freeDataBlock) {
+                _StdOut.putText("No free space available on disk.");
+                return;
+            }
+        
+            freeDirBlock.inUse = "1";
+            freeDirBlock.directoryKey = freeDataBlock.key;
+            freeDirBlock.data = filenameHex.padEnd(60, "0");
+        
+            freeDataBlock.block.inUse = "1";
+        
+            _HardDisk.saveToSessionStorage(); 
+            _HardDisk.displayDisk(); 
+            _StdOut.putText(`File '${filename}' created.`);
+        };
+
+        private doesFileExist(filenameHex: string): boolean {
+            for (let sector = 0; sector < 8; sector++) {
+                for (let block = 0; block < 8; block++) {
+                    let dirBlock = _HardDisk.diskBlocks[0][sector][block];
+                    if (dirBlock.inUse === "1" && dirBlock.data.startsWith(filenameHex)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        private findFreeDirectoryBlock(): DiskBlock | null {
+            for (let sector = 0; sector < 8; sector++) {
+                for (let block = 1; block < 8; block++) { 
+                    let dirBlock = _HardDisk.diskBlocks[0][sector][block];
+                    if (dirBlock.inUse === "0") {
+                        return dirBlock;
+                    }
+                }
+            }
+            return null;
         }
 
         
