@@ -167,6 +167,10 @@ module TSOS {
             sc = new ShellCommand(this.shellRename, "rename", "- rename <current filename> <new filename>");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellLs, "ls", "- displays all files on the disc");
+            this.commandList[this.commandList.length] = sc;
+
+
 
 
 
@@ -1135,6 +1139,34 @@ module TSOS {
             _HardDisk.displayDisk();
         
             _StdOut.putText(`File '${currentFilename}' renamed to '${newFilename}'.`);
+        };
+
+        public shellLs = (): void => {
+            if (!_HardDisk || !_HardDisk.formatted) {
+                _StdOut.putText("Disk not formatted. Please format the disk to view files.");
+                return;
+            }
+        
+            let fileNames = [];
+        
+            for (let sector = 0; sector < 8; sector++) {
+                for (let block = 1; block < 8; block++) { 
+                    let dirBlock = _HardDisk.diskBlocks[0][sector][block];
+                    if (dirBlock.inUse === "1") {
+                        let fileName = this.convertHexToString(dirBlock.data);
+                        fileNames.push(fileName);
+                    }
+                }
+            }
+        
+            if (fileNames.length === 0) {
+                _StdOut.putText("No files found on the disk.");
+            } else {
+                fileNames.forEach(fileName => {
+                    _StdOut.putText(fileName);
+                    _StdOut.advanceLine();
+                });
+            }
         };
         
 
