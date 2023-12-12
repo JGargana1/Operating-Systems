@@ -161,6 +161,9 @@ module TSOS {
             sc = new ShellCommand(this.shellDelete, "delete", "- delete <filename>");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellCopy, "copy", "- copy <current filename> <new filename>");
+            this.commandList[this.commandList.length] = sc;
+
 
 
 
@@ -972,13 +975,11 @@ module TSOS {
         
             const filename = args[0];
         
-            // Check if disk is formatted
             if (!_HardDisk || !_HardDisk.formatted) {
                 _StdOut.putText("Disk not formatted. Please format the disk before deleting files.");
                 return;
             }
         
-            // Convert filename to hex to find the directory entry
             const filenameHex = this.convertToHex(filename);
             const dirBlock = this.findDirectoryBlock(filenameHex);
         
@@ -987,17 +988,14 @@ module TSOS {
                 return;
             }
         
-            // Mark the file's data blocks as free
             this.markDataBlocksFree(dirBlock.directoryKey);
         
-            // Mark the directory entry as free
             dirBlock.inUse = "0";
             dirBlock.directoryKey = "000";
             dirBlock.data = "0".repeat(60);
         
-            _HardDisk.saveToSessionStorage(); // Save changes
+            _HardDisk.saveToSessionStorage(); 
         
-            // Update the disk display
             _HardDisk.displayDisk();
         
             _StdOut.putText(`File '${filename}' deleted.`);
@@ -1012,12 +1010,91 @@ module TSOS {
         
                 dataBlock.inUse = "0";
                 dataBlock.data = "0".repeat(60);
-                currentKey = dataBlock.directoryKey; // Move to next block
-                dataBlock.directoryKey = "000"; // Reset the directory key
+                currentKey = dataBlock.directoryKey; 
+                dataBlock.directoryKey = "000"; 
             }
         }
 
+        public shellCopy = (args: string[]): void => {
+            if (args.length < 2) {
+                _StdOut.putText("Usage: copy <existing filename> <new filename>");
+                return;
+            }
         
+            const existingFilename = args[0];
+            const newFilename = args[1];
+        
+            if (!_HardDisk || !_HardDisk.formatted) {
+                _StdOut.putText("Disk not formatted. Please format the disk before copying files.");
+                return;
+            }
+        
+            const existingFilenameHex = this.convertToHex(existingFilename);
+            const newFilenameHex = this.convertToHex(newFilename);
+        
+            const existingDirBlock = this.findDirectoryBlock(existingFilenameHex);
+            if (!existingDirBlock) {
+                _StdOut.putText(`File '${existingFilename}' not found.`);
+                return;
+            }
+        
+            if (this.doesFileExist(newFilenameHex)) {
+                _StdOut.putText(`File '${newFilename}' already exists.`);
+                return;
+            }
+        
+            const freeDirBlock = this.findFreeDirectoryBlock();
+            if (!freeDirBlock) {
+                _StdOut.putText("No free directory blocks available.");
+                return;
+            }
+        
+            const dataBlocks = this.getDataBlocks(existingDirBlock.directoryKey);
+            let firstNewBlockKey = "";
+            let prevNewBlockKey = "";
+        
+            for (let i = 0; i < dataBlocks.length; i++) {
+                const newFreeBlock = this.findFreeDataBlock();
+                if (!newFreeBlock) {
+                    _StdOut.putText("No free space on disk to copy data.");
+                    return;
+                }
+        
+                newFreeBlock.block.inUse = "1";
+                newFreeBlock.block.data = dataBlocks[i].data;
+        
+                if (i === 0) {
+                    firstNewBlockKey = newFreeBlock.key;
+                } else {
+                    this.updateBlockKey(prevNewBlockKey, newFreeBlock.key);
+                }
+                prevNewBlockKey = newFreeBlock.key;
+            }
+        
+            freeDirBlock.inUse = "1";
+            freeDirBlock.directoryKey = firstNewBlockKey;
+            freeDirBlock.data = newFilenameHex.padEnd(60, "0");
+        
+            _HardDisk.saveToSessionStorage(); 
+        
+            _HardDisk.displayDisk();
+        
+            _StdOut.putText(`File '${existingFilename}' copied as '${newFilename}'.`);
+        };
+        
+        private getDataBlocks(startKey: string): DiskBlock[] {
+            let currentKey = startKey;
+            const blocks = [];
+        
+            while (currentKey !== "000" && currentKey) {
+                const [track, sector, block] = currentKey.split('').map(Number);
+                const dataBlock = _HardDisk.diskBlocks[track][sector][block];
+                blocks.push(dataBlock);
+                currentKey = dataBlock.directoryKey; 
+            }
+        
+            return blocks;
+        }
         
 
         
