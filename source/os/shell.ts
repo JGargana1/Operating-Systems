@@ -158,6 +158,9 @@ module TSOS {
             sc = new ShellCommand(this.shellRead, "read", "- read <filename>");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellDelete, "delete", "- delete <filename>");
+            this.commandList[this.commandList.length] = sc;
+
 
 
 
@@ -960,6 +963,62 @@ module TSOS {
             }
             return str;
         }
+
+        public shellDelete = (args: string[]): void => {
+            if (args.length < 1) {
+                _StdOut.putText("Usage: delete <filename>");
+                return;
+            }
+        
+            const filename = args[0];
+        
+            // Check if disk is formatted
+            if (!_HardDisk || !_HardDisk.formatted) {
+                _StdOut.putText("Disk not formatted. Please format the disk before deleting files.");
+                return;
+            }
+        
+            // Convert filename to hex to find the directory entry
+            const filenameHex = this.convertToHex(filename);
+            const dirBlock = this.findDirectoryBlock(filenameHex);
+        
+            if (!dirBlock) {
+                _StdOut.putText(`File '${filename}' not found.`);
+                return;
+            }
+        
+            // Mark the file's data blocks as free
+            this.markDataBlocksFree(dirBlock.directoryKey);
+        
+            // Mark the directory entry as free
+            dirBlock.inUse = "0";
+            dirBlock.directoryKey = "000";
+            dirBlock.data = "0".repeat(60);
+        
+            _HardDisk.saveToSessionStorage(); // Save changes
+        
+            // Update the disk display
+            _HardDisk.displayDisk();
+        
+            _StdOut.putText(`File '${filename}' deleted.`);
+        };
+
+        private markDataBlocksFree(startKey: string): void {
+            let currentKey = startKey;
+        
+            while (currentKey !== "000" && currentKey) {
+                const [track, sector, block] = currentKey.split('').map(Number);
+                const dataBlock = _HardDisk.diskBlocks[track][sector][block];
+        
+                dataBlock.inUse = "0";
+                dataBlock.data = "0".repeat(60);
+                currentKey = dataBlock.directoryKey; // Move to next block
+                dataBlock.directoryKey = "000"; // Reset the directory key
+            }
+        }
+
+        
+        
 
         
 
