@@ -567,8 +567,9 @@ module TSOS {
         }
         
         private updateDirectoryBlock(pidHexString: string, dataBlockKey: string): void {
+            // Start searching from Sector 0, Block 1 to avoid the MBR
             for (let sector = 0; sector < 8; sector++) {
-                for (let block = 0; block < 8; block++) {
+                for (let block = (sector == 0 ? 1 : 0); block < 8; block++) {
                     let dirBlock = _HardDisk.diskBlocks[0][sector][block];
                     if (dirBlock.inUse === "0") {
                         dirBlock.inUse = "1";
