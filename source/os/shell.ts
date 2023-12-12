@@ -164,6 +164,9 @@ module TSOS {
             sc = new ShellCommand(this.shellCopy, "copy", "- copy <current filename> <new filename>");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellRename, "rename", "- rename <current filename> <new filename>");
+            this.commandList[this.commandList.length] = sc;
+
 
 
 
@@ -1095,6 +1098,44 @@ module TSOS {
         
             return blocks;
         }
+
+        public shellRename = (args: string[]): void => {
+            if (args.length < 2) {
+                _StdOut.putText("Usage: rename <current filename> <new filename>");
+                return;
+            }
+        
+            const currentFilename = args[0];
+            const newFilename = args[1];
+        
+            if (!_HardDisk || !_HardDisk.formatted) {
+                _StdOut.putText("Disk not formatted. Please format the disk before renaming files.");
+                return;
+            }
+        
+            const currentFilenameHex = this.convertToHex(currentFilename);
+            const newFilenameHex = this.convertToHex(newFilename);
+        
+            const currentDirBlock = this.findDirectoryBlock(currentFilenameHex);
+            if (!currentDirBlock) {
+                _StdOut.putText(`File '${currentFilename}' not found.`);
+                return;
+            }
+        
+            if (this.doesFileExist(newFilenameHex)) {
+                _StdOut.putText(`File '${newFilename}' already exists.`);
+                return;
+            }
+        
+            
+            currentDirBlock.data = newFilenameHex.padEnd(60, "0");
+        
+            _HardDisk.saveToSessionStorage(); 
+        
+            _HardDisk.displayDisk();
+        
+            _StdOut.putText(`File '${currentFilename}' renamed to '${newFilename}'.`);
+        };
         
 
         
