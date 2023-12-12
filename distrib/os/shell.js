@@ -392,7 +392,7 @@ var TSOS;
             _PID++;
         }
         loadProgramToDisk(opCodes) {
-            const pidHexString = this.convertToHex(`.swap${_PID}`);
+            const pidHexString = _diskDrivers.convertToHex(`.swap${_PID}`);
             const programData = opCodes.join("");
             const dataChunks = [];
             for (let i = 0; i < programData.length; i += 60) {
@@ -405,7 +405,7 @@ var TSOS;
             let firstBlockKey = "";
             let prevBlockKey = "";
             for (let i = 0; i < dataChunks.length; i++) {
-                let freeBlock = this.findFreeDataBlock();
+                let freeBlock = _diskDrivers.findFreeDataBlock();
                 if (!freeBlock) {
                     _StdOut.putText("No free space on disk");
                     return;
@@ -417,53 +417,15 @@ var TSOS;
                     firstBlockKey = freeBlock.key;
                 }
                 else {
-                    this.updateBlockKey(prevBlockKey, freeBlock.key);
+                    _diskDrivers.updateBlockKey(prevBlockKey, freeBlock.key);
                 }
                 prevBlockKey = freeBlock.key;
             }
             // Update directory block for the first data block
-            this.updateDirectoryBlock(pidHexString, firstBlockKey);
+            _diskDrivers.updateDirectoryBlock(pidHexString, firstBlockKey);
             _HardDisk.saveToSessionStorage();
             _StdOut.putText(`Program loaded onto disk with PID: ${_PID}`);
             _PID++;
-        }
-        findFreeDataBlock() {
-            // Find a free data block in Tracks 1-3
-            for (let track = 1; track < 4; track++) {
-                for (let sector = 0; sector < 8; sector++) {
-                    for (let block = 0; block < 8; block++) {
-                        let dataBlock = _HardDisk.diskBlocks[track][sector][block];
-                        if (dataBlock.inUse === "0") {
-                            return { key: `${track}${sector}${block}`, block: dataBlock };
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-        updateDirectoryBlock(pidHexString, dataBlockKey) {
-            // Start searching from Sector 0, Block 1 to avoid the MBR
-            for (let sector = 0; sector < 8; sector++) {
-                for (let block = (sector == 0 ? 1 : 0); block < 8; block++) {
-                    let dirBlock = _HardDisk.diskBlocks[0][sector][block];
-                    if (dirBlock.inUse === "0") {
-                        dirBlock.inUse = "1";
-                        dirBlock.directoryKey = dataBlockKey;
-                        dirBlock.data = pidHexString.padEnd(60, "0");
-                        return;
-                    }
-                }
-            }
-            throw new Error("No free directory block found");
-        }
-        updateBlockKey(previousKey, nextBlockKey) {
-            // Update the directory key of a block to point to the next block
-            let [track, sector, block] = previousKey.split('').map(Number);
-            let prevBlock = _HardDisk.diskBlocks[track][sector][block];
-            prevBlock.directoryKey = nextBlockKey;
-        }
-        convertToHex(str) {
-            return str.split('').map(char => char.charCodeAt(0).toString(16)).join('');
         }
         createPCBDisplay(program) {
             const pcbContainer = document.getElementById("pcb-container");
@@ -619,13 +581,13 @@ var TSOS;
                 _StdOut.putText("Disk not formatted. Please format the disk before creating files.");
                 return;
             }
-            const filenameHex = this.convertToHex(filename);
-            if (this.doesFileExist(filenameHex)) {
+            const filenameHex = _diskDrivers.convertToHex(filename);
+            if (_diskDrivers.doesFileExist(filenameHex)) {
                 _StdOut.putText(`File '${filename}' already exists.`);
                 return;
             }
-            let freeDirBlock = this.findFreeDirectoryBlock();
-            let freeDataBlock = this.findFreeDataBlock();
+            let freeDirBlock = _diskDrivers.findFreeDirectoryBlock();
+            let freeDataBlock = _diskDrivers.findFreeDataBlock();
             if (!freeDirBlock || !freeDataBlock) {
                 _StdOut.putText("No free space available on disk.");
                 return;
@@ -638,28 +600,6 @@ var TSOS;
             _HardDisk.displayDisk();
             _StdOut.putText(`File '${filename}' created.`);
         };
-        doesFileExist(filenameHex) {
-            for (let sector = 0; sector < 8; sector++) {
-                for (let block = 0; block < 8; block++) {
-                    let dirBlock = _HardDisk.diskBlocks[0][sector][block];
-                    if (dirBlock.inUse === "1" && dirBlock.data.startsWith(filenameHex)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        findFreeDirectoryBlock() {
-            for (let sector = 0; sector < 8; sector++) {
-                for (let block = 1; block < 8; block++) {
-                    let dirBlock = _HardDisk.diskBlocks[0][sector][block];
-                    if (dirBlock.inUse === "0") {
-                        return dirBlock;
-                    }
-                }
-            }
-            return null;
-        }
         shellWrite = (args) => {
             if (args.length < 2) {
                 _StdOut.putText("Usage: write <filename> \"data\"");
@@ -676,46 +616,18 @@ var TSOS;
                 _StdOut.putText("Disk not formatted. Please format the disk before writing to files.");
                 return;
             }
-            const filenameHex = this.convertToHex(filename);
-            const dirBlock = this.findDirectoryBlock(filenameHex);
+            const filenameHex = _diskDrivers.convertToHex(filename);
+            const dirBlock = _diskDrivers.findDirectoryBlock(filenameHex);
             if (!dirBlock) {
                 _StdOut.putText(`File '${filename}' not found.`);
                 return;
             }
-            const dataHex = this.convertToHex(data);
-            this.writeDataToDisk(dirBlock.directoryKey, dataHex);
+            const dataHex = _diskDrivers.convertToHex(data);
+            _diskDrivers.writeDataToDisk(dirBlock.directoryKey, dataHex);
             _HardDisk.saveToSessionStorage();
             _HardDisk.displayDisk();
             _StdOut.putText(`Data written to file '${filename}'.`);
         };
-        findDirectoryBlock(filenameHex) {
-            for (let sector = 0; sector < 8; sector++) {
-                for (let block = 0; block < 8; block++) {
-                    let dirBlock = _HardDisk.diskBlocks[0][sector][block];
-                    if (dirBlock.inUse === "1" && dirBlock.data.startsWith(filenameHex)) {
-                        return dirBlock;
-                    }
-                }
-            }
-            return null;
-        }
-        writeDataToDisk(startKey, dataHex) {
-            let currentKey = startKey;
-            const dataChunks = this.splitIntoChunks(dataHex, 60);
-            for (const chunk of dataChunks) {
-                const [track, sector, block] = currentKey.split('').map(Number);
-                const dataBlock = _HardDisk.diskBlocks[track][sector][block];
-                dataBlock.data = chunk.padEnd(60, "0");
-                currentKey = dataBlock.directoryKey;
-            }
-        }
-        splitIntoChunks(str, chunkSize) {
-            const chunks = [];
-            for (let i = 0; i < str.length; i += chunkSize) {
-                chunks.push(str.substring(i, i + chunkSize));
-            }
-            return chunks;
-        }
         shellRead = (args) => {
             if (args.length < 1) {
                 _StdOut.putText("Usage: read <filename>");
@@ -726,37 +638,16 @@ var TSOS;
                 _StdOut.putText("Disk not formatted. Please format the disk before reading files.");
                 return;
             }
-            const filenameHex = this.convertToHex(filename);
-            const dirBlock = this.findDirectoryBlock(filenameHex);
+            const filenameHex = _diskDrivers.convertToHex(filename);
+            const dirBlock = _diskDrivers.findDirectoryBlock(filenameHex);
             if (!dirBlock) {
                 _StdOut.putText(`File '${filename}' not found.`);
                 return;
             }
-            const dataHex = this.readDataFromDisk(dirBlock.directoryKey);
-            const data = this.convertHexToString(dataHex);
+            const dataHex = _diskDrivers.readDataFromDisk(dirBlock.directoryKey);
+            const data = _diskDrivers.convertHexToString(dataHex);
             _StdOut.putText(`File '${filename}' contains: ${data}`);
         };
-        readDataFromDisk(startKey) {
-            let currentKey = startKey;
-            let dataHex = "";
-            while (currentKey !== "000" && currentKey) {
-                const [track, sector, block] = currentKey.split('').map(Number);
-                const dataBlock = _HardDisk.diskBlocks[track][sector][block];
-                dataHex += dataBlock.data;
-                currentKey = dataBlock.directoryKey;
-            }
-            return dataHex;
-        }
-        convertHexToString(hexStr) {
-            let str = "";
-            for (let i = 0; i < hexStr.length; i += 2) {
-                const byte = hexStr.substr(i, 2);
-                if (byte !== "00") {
-                    str += String.fromCharCode(parseInt(byte, 16));
-                }
-            }
-            return str;
-        }
         shellDelete = (args) => {
             if (args.length < 1) {
                 _StdOut.putText("Usage: delete <filename>");
@@ -767,8 +658,8 @@ var TSOS;
                 _StdOut.putText("Disk not formatted. Please format the disk before deleting files.");
                 return;
             }
-            const filenameHex = this.convertToHex(filename);
-            const dirBlock = this.findDirectoryBlock(filenameHex);
+            const filenameHex = _diskDrivers.convertToHex(filename);
+            const dirBlock = _diskDrivers.findDirectoryBlock(filenameHex);
             if (!dirBlock) {
                 _StdOut.putText(`File '${filename}' not found.`);
                 return;
@@ -803,27 +694,27 @@ var TSOS;
                 _StdOut.putText("Disk not formatted. Please format the disk before copying files.");
                 return;
             }
-            const existingFilenameHex = this.convertToHex(existingFilename);
-            const newFilenameHex = this.convertToHex(newFilename);
-            const existingDirBlock = this.findDirectoryBlock(existingFilenameHex);
+            const existingFilenameHex = _diskDrivers.convertToHex(existingFilename);
+            const newFilenameHex = _diskDrivers.convertToHex(newFilename);
+            const existingDirBlock = _diskDrivers.findDirectoryBlock(existingFilenameHex);
             if (!existingDirBlock) {
                 _StdOut.putText(`File '${existingFilename}' not found.`);
                 return;
             }
-            if (this.doesFileExist(newFilenameHex)) {
+            if (_diskDrivers.doesFileExist(newFilenameHex)) {
                 _StdOut.putText(`File '${newFilename}' already exists.`);
                 return;
             }
-            const freeDirBlock = this.findFreeDirectoryBlock();
+            const freeDirBlock = _diskDrivers.findFreeDirectoryBlock();
             if (!freeDirBlock) {
                 _StdOut.putText("No free directory blocks available.");
                 return;
             }
-            const dataBlocks = this.getDataBlocks(existingDirBlock.directoryKey);
+            const dataBlocks = _diskDrivers.getDataBlocks(existingDirBlock.directoryKey);
             let firstNewBlockKey = "";
             let prevNewBlockKey = "";
             for (let i = 0; i < dataBlocks.length; i++) {
-                const newFreeBlock = this.findFreeDataBlock();
+                const newFreeBlock = _diskDrivers.findFreeDataBlock();
                 if (!newFreeBlock) {
                     _StdOut.putText("No free space on disk to copy data.");
                     return;
@@ -834,7 +725,7 @@ var TSOS;
                     firstNewBlockKey = newFreeBlock.key;
                 }
                 else {
-                    this.updateBlockKey(prevNewBlockKey, newFreeBlock.key);
+                    _diskDrivers.updateBlockKey(prevNewBlockKey, newFreeBlock.key);
                 }
                 prevNewBlockKey = newFreeBlock.key;
             }
@@ -845,17 +736,6 @@ var TSOS;
             _HardDisk.displayDisk();
             _StdOut.putText(`File '${existingFilename}' copied as '${newFilename}'.`);
         };
-        getDataBlocks(startKey) {
-            let currentKey = startKey;
-            const blocks = [];
-            while (currentKey !== "000" && currentKey) {
-                const [track, sector, block] = currentKey.split('').map(Number);
-                const dataBlock = _HardDisk.diskBlocks[track][sector][block];
-                blocks.push(dataBlock);
-                currentKey = dataBlock.directoryKey;
-            }
-            return blocks;
-        }
         shellRename = (args) => {
             if (args.length < 2) {
                 _StdOut.putText("Usage: rename <current filename> <new filename>");
@@ -867,14 +747,14 @@ var TSOS;
                 _StdOut.putText("Disk not formatted. Please format the disk before renaming files.");
                 return;
             }
-            const currentFilenameHex = this.convertToHex(currentFilename);
-            const newFilenameHex = this.convertToHex(newFilename);
-            const currentDirBlock = this.findDirectoryBlock(currentFilenameHex);
+            const currentFilenameHex = _diskDrivers.convertToHex(currentFilename);
+            const newFilenameHex = _diskDrivers.convertToHex(newFilename);
+            const currentDirBlock = _diskDrivers.findDirectoryBlock(currentFilenameHex);
             if (!currentDirBlock) {
                 _StdOut.putText(`File '${currentFilename}' not found.`);
                 return;
             }
-            if (this.doesFileExist(newFilenameHex)) {
+            if (_diskDrivers.doesFileExist(newFilenameHex)) {
                 _StdOut.putText(`File '${newFilename}' already exists.`);
                 return;
             }
@@ -893,7 +773,7 @@ var TSOS;
                 for (let block = 1; block < 8; block++) {
                     let dirBlock = _HardDisk.diskBlocks[0][sector][block];
                     if (dirBlock.inUse === "1") {
-                        let fileName = this.convertHexToString(dirBlock.data);
+                        let fileName = _diskDrivers.convertHexToString(dirBlock.data);
                         fileNames.push(fileName);
                     }
                 }

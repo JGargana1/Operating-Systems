@@ -41,6 +41,7 @@ var _Memory;
 var _MemoryAccessor;
 //	Software	(OS)
 var _HardDisk;
+var _diskDrivers;
 let _Programs = [];
 var _MemoryManager = null;
 // Standard input and output
@@ -65,6 +66,7 @@ var onDocumentLoad = function () {
     _Scheduler = new TSOS.Scheduler();
     _Memory.displayMemory(_Memory);
     _HardDisk = new TSOS.HardDisk();
+    _diskDrivers = new TSOS.diskDrivers();
     TSOS.Control.hostInit();
 };
 //# sourceMappingURL=globals.js.map
